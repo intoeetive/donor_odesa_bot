@@ -1,6 +1,6 @@
 <?php
 
-use DefStudio\Telegraph\Handlers\EmptyWebhookHandler;
+use App\Handlers\DonorWebhookHandler;
 use DefStudio\Telegraph\Telegraph;
 
 return [
@@ -16,7 +16,7 @@ return [
      *
      * For reference, see https://def-studio.github.io/telegraph/webhooks/overview
      */
-    'webhook_handler' => EmptyWebhookHandler::class,
+    'webhook_handler' => DonorWebhookHandler::class,
 
     /*
      * If enabled, Telegraph dumps received
