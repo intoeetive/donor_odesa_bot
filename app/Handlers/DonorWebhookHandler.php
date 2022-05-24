@@ -3,11 +3,19 @@
 namespace App\Handlers;
 
 use DefStudio\Telegraph\Handlers\WebhookHandler;
+use DefStudio\Telegraph\Keyboard\Button;
+use DefStudio\Telegraph\Keyboard\Keyboard;
 
 class DonorWebhookHandler extends WebhookHandler
 {
-    public function hi()
+    public function start()
     {
-        $this->chat->markdown("*Hi* happy to be here!")->send();
+        $this->chat
+            ->markdown("Ласкаво просимо до бота *Донор Одеса*")
+            ->keyboard(Keyboard::make()->buttons([
+                Button::make('Реєстрація донора')->action('delete')->param('id', '42'),
+                Button::make('Я вже реєструвався')->url('https://test.it'),
+            ]))
+            ->send();
     }
 }
