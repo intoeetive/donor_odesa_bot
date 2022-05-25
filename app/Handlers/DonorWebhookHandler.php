@@ -13,6 +13,7 @@ class DonorWebhookHandler extends WebhookHandler
         //start with saving this chat
         $chat = $this->bot->chats()->firstOrCreate([
             'chat_id' => $this->chat->chat_id,
+            'name' => $this->chat->chat_id,
         ]);
         
         // maybe we have a record already?
@@ -21,12 +22,12 @@ class DonorWebhookHandler extends WebhookHandler
         $this->chat
             ->markdown(__('messages.message.welcome'))
             ->keyboard(Keyboard::make()->buttons([
-                Button::make(__('messages.button.sharePhoneNumber'))->action('sharephonenumber')->param('id', '42'),
+                Button::make(__('messages.button.sharePhoneNumber'))->action('sharePhoneNumber')->param('id', '42'),
             ]))
             ->send();
     }
 
-    public function sharephonenumber() {
+    public function sharePhoneNumber() {
         //take the phone number and look up in the database
 
         //if it's there - skip to confirmation
