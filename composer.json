@@ -10,6 +10,7 @@
         "laravel/framework": "^9.11",
         "laravel/sanctum": "^2.14.1",
         "laravel/tinker": "^2.7",
+        "revolution/laravel-google-sheets": "^6.0",
         "defstudio/telegraph": "*"
     },
     "require-dev": {
@@ -20,12 +21,6 @@
         "phpunit/phpunit": "^9.5.10",
         "spatie/laravel-ignition": "^1.0"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "git@github.com:intoeetive/telegraph.git"
-        }
-    ],
     "autoload": {
         "psr-4": {
             "App\\": "app/",

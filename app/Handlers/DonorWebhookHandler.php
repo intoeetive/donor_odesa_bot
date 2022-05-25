@@ -29,7 +29,7 @@ class DonorWebhookHandler extends WebhookHandler
 
     public function sharePhoneNumber() {
         //first, do some cleanup
-        $this->chat->deleteKeyboard($this->callbackQueryId)->send();
+        $this->chat->deleteKeyboard($this->messageId)->send();
 
         //take the phone number and look up in the database
 
@@ -57,6 +57,7 @@ class DonorWebhookHandler extends WebhookHandler
 
     public function shareBloodType()
     {
+        $this->chat->deleteKeyboard($this->messageId)->send();
         //record the blood type
 
         //now ask for name
@@ -70,6 +71,7 @@ class DonorWebhookHandler extends WebhookHandler
 
     public function shareName()
     {
+        $this->chat->deleteKeyboard($this->messageId)->send();
         //record the name
 
         //sync the data to Google Sheet
