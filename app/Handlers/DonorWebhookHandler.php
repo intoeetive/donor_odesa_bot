@@ -14,9 +14,9 @@ class DonorWebhookHandler extends WebhookHandler
         //return $this->confirmationExistingUser();
 
         $this->chat
-            ->markdown(__('message.welcome'))
+            ->markdown(__('messages.message.welcome'))
             ->keyboard(Keyboard::make()->buttons([
-                Button::make(__('button.sharePhoneNumber'))->action('sharePhoneNumber')->param('id', '42'),
+                Button::make(__('messages.button.sharePhoneNumber'))->action('sharePhoneNumber')->param('id', '42'),
             ]))
             ->send();
     }
@@ -31,7 +31,7 @@ class DonorWebhookHandler extends WebhookHandler
 
         //ask for blood type
         $this->chat
-            ->markdown(__('message.your_blood_type'))
+            ->markdown(__('messages.message.your_blood_type'))
             ->keyboard(Keyboard::make()->buttons([
                 Button::make('I+ (O+)')->action('shareBloodType')->param('type', '1+'),
                 Button::make('II+ (A+)')->action('shareBloodType')->param('type', '2+'),
@@ -51,9 +51,9 @@ class DonorWebhookHandler extends WebhookHandler
 
         //now ask for name
         $this->chat
-            ->markdown(__('message.your_name'))
+            ->markdown(__('messages.message.your_name'))
             ->keyboard(Keyboard::make()->buttons([
-                Button::make(__('button.shareName'))->action('shareName')->param('id', '42'),
+                Button::make(__('messages.button.shareName'))->action('shareName')->param('id', '42'),
             ]))
             ->send();
     }
@@ -67,7 +67,7 @@ class DonorWebhookHandler extends WebhookHandler
 
         //show them confirmation message
         $this->chat
-            ->markdown(__('message.thank_you'))
+            ->markdown(__('messages.message.thank_you'))
             ->send();
     }
 
