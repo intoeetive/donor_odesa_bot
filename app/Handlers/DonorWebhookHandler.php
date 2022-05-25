@@ -28,13 +28,16 @@ class DonorWebhookHandler extends WebhookHandler
     }
 
     public function sharePhoneNumber() {
+        //first, do some cleanup
+        $this->chat->deleteKeyboard($this->callbackQueryId)->send();
+
         //take the phone number and look up in the database
 
         //if it's there - skip to confirmation
         //return $this->confirmationExistingUser();
 
         //if it's new user, walk through the registration process
-        $this->reply("notification dismissed");
+        
 
         //ask for blood type
         $this->chat
