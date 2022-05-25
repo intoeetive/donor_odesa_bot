@@ -43,14 +43,14 @@ class DonorWebhookHandler extends WebhookHandler
         $this->chat
             ->markdown(__('messages.message.your_blood_type'))
             ->keyboard(Keyboard::make()->buttons([
-                Button::make('I+ (O+)')->action('share-blood-type')->param('type', '1+'),
-                Button::make('II+ (A+)')->action('share-blood-type')->param('type', '2+'),
-                Button::make('III+ (B+)')->action('share-blood-type')->param('type', '3+'),
-                Button::make('IV+ (AB+)')->action('share-blood-type')->param('type', '4+'),
-                Button::make('I- (O-)')->action('share-blood-type')->param('type', '1-'),
-                Button::make('II- (A-)')->action('share-blood-type')->param('type', '2-'),
-                Button::make('III- (B-)')->action('share-blood-type')->param('type', '3-'),
-                Button::make('IV- (AB-)')->action('share-blood-type')->param('type', '4-'),
+                Button::make('I+ (O+)')->action('shareBloodType')->param('type', '1+'),
+                Button::make('II+ (A+)')->action('shareBloodType')->param('type', '2+'),
+                Button::make('III+ (B+)')->action('shareBloodType')->param('type', '3+'),
+                Button::make('IV+ (AB+)')->action('shareBloodType')->param('type', '4+'),
+                Button::make('I- (O-)')->action('shareBloodType')->param('type', '1-'),
+                Button::make('II- (A-)')->action('shareBloodType')->param('type', '2-'),
+                Button::make('III- (B-)')->action('shareBloodType')->param('type', '3-'),
+                Button::make('IV- (AB-)')->action('shareBloodType')->param('type', '4-'),
             ])->chunk(2))
             ->send();
     }
