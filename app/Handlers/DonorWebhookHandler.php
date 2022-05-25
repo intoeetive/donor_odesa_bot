@@ -10,6 +10,11 @@ class DonorWebhookHandler extends WebhookHandler
 {
     public function start()
     {
+        //start with saving this chat
+        $chat = $this->bot->chats()->firstOrCreate([
+            'chat_id' => $this->chat->chat_id,
+        ]);
+        
         // maybe we have a record already?
         //return $this->confirmationExistingUser();
 
