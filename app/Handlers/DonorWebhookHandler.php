@@ -14,14 +14,14 @@ class DonorWebhookHandler extends WebhookHandler
         //return $this->confirmationExistingUser();
 
         $this->chat
-            ->markdown(__('messages.message.welcome'))
+            ->markdown(__('messages..message.welcome'))
             ->keyboard(Keyboard::make()->buttons([
-                Button::make(__('messages.button.sharePhoneNumber'))->action('sharePhoneNumber')->param('id', '42'),
+                Button::make(__('messages.button.sharePhoneNumber'))->action('sharephonenumber')->param('id', '42'),
             ]))
             ->send();
     }
 
-    public function sharePhoneNumber() {
+    public function sharephonenumber() {
         //take the phone number and look up in the database
 
         //if it's there - skip to confirmation
@@ -33,15 +33,15 @@ class DonorWebhookHandler extends WebhookHandler
         $this->chat
             ->markdown(__('messages.message.your_blood_type'))
             ->keyboard(Keyboard::make()->buttons([
-                Button::make('I+ (O+)')->action('shareBloodType')->param('type', '1+'),
-                Button::make('II+ (A+)')->action('shareBloodType')->param('type', '2+'),
-                Button::make('III+ (B+)')->action('shareBloodType')->param('type', '3+'),
-                Button::make('IV+ (AB+)')->action('shareBloodType')->param('type', '4+'),
-                Button::make('I- (O-)')->action('shareBloodType')->param('type', '1-'),
-                Button::make('II- (A-)')->action('shareBloodType')->param('type', '2-'),
-                Button::make('III- (B-)')->action('shareBloodType')->param('type', '3-'),
-                Button::make('IV- (AB-)')->action('shareBloodType')->param('type', '4-'),
-            ]))
+                Button::make('I+ (O+)')->action('share-blood-type')->param('type', '1+'),
+                Button::make('II+ (A+)')->action('share-blood-type')->param('type', '2+'),
+                Button::make('III+ (B+)')->action('share-blood-type')->param('type', '3+'),
+                Button::make('IV+ (AB+)')->action('share-blood-type')->param('type', '4+'),
+                Button::make('I- (O-)')->action('share-blood-type')->param('type', '1-'),
+                Button::make('II- (A-)')->action('share-blood-type')->param('type', '2-'),
+                Button::make('III- (B-)')->action('share-blood-type')->param('type', '3-'),
+                Button::make('IV- (AB-)')->action('share-blood-type')->param('type', '4-'),
+            ])->chunk(2))
             ->send();
     }
 
