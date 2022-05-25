@@ -14,7 +14,7 @@ class DonorWebhookHandler extends WebhookHandler
         //return $this->confirmationExistingUser();
 
         $this->chat
-            ->markdown(__('messages..message.welcome'))
+            ->markdown(__('messages.message.welcome'))
             ->keyboard(Keyboard::make()->buttons([
                 Button::make(__('messages.button.sharePhoneNumber'))->action('sharephonenumber')->param('id', '42'),
             ]))
@@ -28,6 +28,7 @@ class DonorWebhookHandler extends WebhookHandler
         //return $this->confirmationExistingUser();
 
         //if it's new user, walk through the registration process
+        $this->reply("notification dismissed");
 
         //ask for blood type
         $this->chat
