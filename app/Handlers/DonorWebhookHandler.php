@@ -7,17 +7,18 @@ use DefStudio\Telegraph\Keyboard\Button;
 use DefStudio\Telegraph\Keyboard\Keyboard;
 use DefStudio\Telegraph\Enums\ChatActions;
 use DefStudio\Telegraph\Telegraph;
+use Exception;
 
 class DonorWebhookHandler extends WebhookHandler
 {
-    public function start()
+    public function start(): void
     {
         $this->chat->html($this->data)->send();
         
         //start with saving this chat
         $chat = $this->bot->chats()->firstOrCreate([
             'chat_id' => $this->chat->chat_id,
-            'name' => $this->chat->chat_id,
+            'name' => $this->chat->first_name . ' ' . $this->chat->last_name,
         ]);
         
         // maybe we have a record already?
@@ -31,7 +32,8 @@ class DonorWebhookHandler extends WebhookHandler
             ->send();
     }
 
-    public function sharePhoneNumber() {
+    public function sharePhoneNumber(): void
+    {
         //first, do some cleanup
         $this->chat->deleteKeyboard($this->messageId)->send();
         $this->chat->markdown('*+380123456578*')->send();
@@ -60,7 +62,7 @@ class DonorWebhookHandler extends WebhookHandler
             ->send();
     }
 
-    public function shareBloodType()
+    public function shareBloodType(): void
     {
         $this->chat->deleteKeyboard($this->messageId)->send();
         //record the blood type
@@ -81,6 +83,15 @@ class DonorWebhookHandler extends WebhookHandler
                 break;
         }
         $rh = $this->data->get('rh', '+');
+
+        try {
+            $this->chat->blood_type = $type;
+            $this->chat->blood_rh = $rh;
+            $this->chat->save();
+        } catch (Exception $e) {
+            $this->reply("Помилка збереження.")->send();
+        }
+
         $this->chat->markdown("*{$type}{$rh}*")->send();
 
         //now ask for name
