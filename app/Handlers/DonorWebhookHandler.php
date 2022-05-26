@@ -45,7 +45,12 @@ class DonorWebhookHandler extends WebhookHandler
         //return $this->confirmationExistingUser();
 
         //if it's new user, walk through the registration process
-        
+        try {
+            $this->chat->phone = '+380123456578';
+            $this->chat->save();
+        } catch (Exception $e) {
+            $this->reply("Помилка збереження.")->send();
+        }
 
         //ask for blood type
         $this->chat
@@ -106,10 +111,10 @@ class DonorWebhookHandler extends WebhookHandler
 
     public function shareName()
     {
-        //$this->chat->deleteKeyboard($this->messageId)->send();
+        $this->chat->deleteKeyboard($this->messageId)->send();
         //record the name
 
-        $this->chat->markdown("*Петро П'яточкін*")->send();
+        $this->chat->markdown("*{$this->chat->name}*")->send();
         //sync the data to Google Sheet
         $this->sendDataToGoogleSheet();
 
@@ -122,11 +127,11 @@ class DonorWebhookHandler extends WebhookHandler
     private function sendDataToGoogleSheet()
     {
         $append = [
-            '',
-            $this->chat->name,
-            $this->chat->blood_type,
-            $this->chat->blood_rh,
-            $this->chat->phone_number,
+            "Отметка времени" => "",
+            "Прізвище, Ім'я" => $this->chat->name,
+            "Група крові" => $this->chat->blood_type,
+            "Резус-фактор" => $this->chat->blood_rh,
+            "Ваш мобільный телефон" => $this->chat->phone_number,
         ];
         try {
             Sheets::spreadsheet(config('google.spreadsheet_id'))
@@ -135,7 +140,7 @@ class DonorWebhookHandler extends WebhookHandler
         } catch (\Google\Service\Exception $e) {
             $this->chat->reply("Помилка збереження данних")->send();
         }
-        
+        return true;
     }
 
     private function confirmationExistingUser()
