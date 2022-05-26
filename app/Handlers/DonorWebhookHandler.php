@@ -17,7 +17,6 @@ class DonorWebhookHandler extends WebhookHandler
         //start with saving this chat
         $this->bot->chats()->firstOrCreate([
             'chat_id' => $this->chat->chat_id,
-            'name' => $this->message->from()->firstName() . ' ' . $this->message->from()->lastName(),
         ]);
         
         // maybe we have a record already?
@@ -111,6 +110,13 @@ class DonorWebhookHandler extends WebhookHandler
     {
         $this->chat->deleteKeyboard($this->messageId)->send();
         //record the name
+        try {
+            $this->chat->name = $this->message->from()->firstName() . ' ' . $this->message->from()->lastName();
+            $this->chat->save();
+        } catch (Exception $e) {
+            $this->reply("Помилка збереження.")->send();
+        }
+        
 
         $this->chat->markdown("*{$this->chat->name}*")->send();
         //sync the data to Google Sheet
