@@ -10,15 +10,15 @@ return new class () extends Migration {
         Schema::create('donor_chats', function (Blueprint $table) {
             $table->id();
             $table->string('chat_id');
-            $table->string('name', '');
+            $table->string('name')->nullable();
 
             $table->foreignId('telegraph_bot_id')->constrained('telegraph_bots')->cascadeOnDelete();
-            $table->string('phone', '');
-            $table->enum('blood_type', ['I (1)', 'II (2)', 'III (3)', 'IV (4)']);
-            $table->enum('blood_rh', ['+', '-']);
+            $table->string('phone')->nullable();
+            $table->enum('blood_type', ['', 'I (1)', 'II (2)', 'III (3)', 'IV (4)']);
+            $table->enum('blood_rh', ['', '+', '-']);
 
-            $table->date('last_request_date');
-            $table->date('last_donor_date');
+            $table->date('last_request_date')->nullable();
+            $table->date('last_donor_date')->nullable();
 
             $table->timestamps();
 
