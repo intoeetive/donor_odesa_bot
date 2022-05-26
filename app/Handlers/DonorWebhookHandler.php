@@ -7,6 +7,7 @@ use DefStudio\Telegraph\Keyboard\Button;
 use DefStudio\Telegraph\Keyboard\Keyboard;
 use DefStudio\Telegraph\Enums\ChatActions;
 use DefStudio\Telegraph\Telegraph;
+use Revolution\Google\Sheets\Facades\Sheets;
 use Exception;
 
 class DonorWebhookHandler extends WebhookHandler
@@ -120,7 +121,16 @@ class DonorWebhookHandler extends WebhookHandler
 
     private function sendDataToGoogleSheet()
     {
-
+        $append = [
+            '',
+            $this->chat->name,
+            $this->chat->blood_type,
+            $this->chat->blood_rh,
+            $this->chat->phone_number,
+        ];
+        Sheets::spreadsheet(config('google.spreadsheet_id'))
+              ->sheet(config('google.sheet_id'))
+              ->append([$append]);
     }
 
     private function confirmationExistingUser()
