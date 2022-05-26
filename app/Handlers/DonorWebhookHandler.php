@@ -14,12 +14,10 @@ class DonorWebhookHandler extends WebhookHandler
 {
     public function start(): void
     {
-        //$this->chat->html($this->data)->send();
-        
         //start with saving this chat
         $this->bot->chats()->firstOrCreate([
             'chat_id' => $this->chat->chat_id,
-            'name' => $this->chat->first_name . ' ' . $this->chat->last_name,
+            'name' => $this->message->from()->firstName() . ' ' . $this->message->from()->lastName(),
         ]);
         
         // maybe we have a record already?
@@ -131,7 +129,7 @@ class DonorWebhookHandler extends WebhookHandler
             "Прізвище, Ім'я" => $this->chat->name,
             "Група крові" => $this->chat->blood_type,
             "Резус-фактор" => $this->chat->blood_rh,
-            "Ваш мобільный телефон" => $this->chat->phone_number,
+            "Ваш мобільный телефон" => $this->chat->phone,
         ];
         try {
             Sheets::spreadsheet(config('google.spreadsheet_id'))
