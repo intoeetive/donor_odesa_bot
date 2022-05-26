@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class () extends Migration {
     public function up(): void
     {
-        Schema::create('telegraph_chats', function (Blueprint $table) {
+        Schema::create('donor_chats', function (Blueprint $table) {
             $table->id();
             $table->string('chat_id');
             $table->string('name', '');

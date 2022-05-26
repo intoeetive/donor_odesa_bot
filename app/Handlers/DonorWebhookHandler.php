@@ -13,10 +13,10 @@ class DonorWebhookHandler extends WebhookHandler
 {
     public function start(): void
     {
-        $this->chat->html($this->data)->send();
+        //$this->chat->html($this->data)->send();
         
         //start with saving this chat
-        $chat = $this->bot->chats()->firstOrCreate([
+        $this->bot->chats()->firstOrCreate([
             'chat_id' => $this->chat->chat_id,
             'name' => $this->chat->first_name . ' ' . $this->chat->last_name,
         ]);
