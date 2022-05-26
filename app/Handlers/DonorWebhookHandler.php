@@ -6,11 +6,14 @@ use DefStudio\Telegraph\Handlers\WebhookHandler;
 use DefStudio\Telegraph\Keyboard\Button;
 use DefStudio\Telegraph\Keyboard\Keyboard;
 use DefStudio\Telegraph\Enums\ChatActions;
+use DefStudio\Telegraph\Telegraph;
 
 class DonorWebhookHandler extends WebhookHandler
 {
     public function start()
     {
+        $this->chat->html($this->data)->send();
+        
         //start with saving this chat
         $chat = $this->bot->chats()->firstOrCreate([
             'chat_id' => $this->chat->chat_id,
@@ -30,7 +33,6 @@ class DonorWebhookHandler extends WebhookHandler
 
     public function sharePhoneNumber() {
         //first, do some cleanup
-        $this->chat->chatAction(ChatActions::TYPING)->send();
         $this->chat->deleteKeyboard($this->messageId)->send();
         $this->chat->markdown('*+380123456578*')->send();
 
@@ -95,6 +97,7 @@ class DonorWebhookHandler extends WebhookHandler
         $this->chat->deleteKeyboard($this->messageId)->send();
         //record the name
 
+        $this->chat->markdown("*Петро П'яточкін*")->send();
         //sync the data to Google Sheet
         $this->sendDataToGoogleSheet();
 
