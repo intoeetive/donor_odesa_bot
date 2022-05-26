@@ -33,6 +33,6 @@ return [
      */
     'models' => [
         'bot' => DefStudio\Telegraph\Models\TelegraphBot::class,
-        'chat' => All\Models\DonorChat::class,
+        'chat' => App\Models\DonorChat::class,
     ],
 ];
