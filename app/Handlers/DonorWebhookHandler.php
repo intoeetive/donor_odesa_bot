@@ -106,16 +106,12 @@ class DonorWebhookHandler extends WebhookHandler
 
     public function shareName()
     {
-        $this->chat->deleteKeyboard($this->messageId)->send();
+        //$this->chat->deleteKeyboard($this->messageId)->send();
         //record the name
 
         $this->chat->markdown("*Петро П'яточкін*")->send();
         //sync the data to Google Sheet
-        try {
-            $this->sendDataToGoogleSheet();
-        } catch (Exception $e) {
-            $this->reply("Помилка збереження данних")->send();
-        }
+        $this->sendDataToGoogleSheet();
 
         //show them confirmation message
         $this->chat
@@ -132,9 +128,14 @@ class DonorWebhookHandler extends WebhookHandler
             $this->chat->blood_rh,
             $this->chat->phone_number,
         ];
-        Sheets::spreadsheet(config('google.spreadsheet_id'))
-              ->sheet(config('google.sheet_id'))
+        try {
+            Sheets::spreadsheet(config('google.spreadsheet_id'))
+              ->sheetById(config('google.sheet_id'))
               ->append([$append]);
+        } catch (\Google\Service\Exception $e) {
+            $this->chat->reply("Помилка збереження данних")->send();
+        }
+        
     }
 
     private function confirmationExistingUser()
