@@ -111,7 +111,11 @@ class DonorWebhookHandler extends WebhookHandler
 
         $this->chat->markdown("*Петро П'яточкін*")->send();
         //sync the data to Google Sheet
-        $this->sendDataToGoogleSheet();
+        try {
+            $this->sendDataToGoogleSheet();
+        } catch (Exception $e) {
+            $this->reply("Помилка збереження данних")->send();
+        }
 
         //show them confirmation message
         $this->chat
