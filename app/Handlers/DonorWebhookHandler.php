@@ -10,6 +10,8 @@ use DefStudio\Telegraph\Telegraph;
 use Revolution\Google\Sheets\Facades\Sheets;
 use Exception;
 
+use App\Models\Donor;
+
 class DonorWebhookHandler extends WebhookHandler
 {
     public function start(): void
@@ -19,6 +21,25 @@ class DonorWebhookHandler extends WebhookHandler
             'chat_id' => $this->chat->chat_id,
         ]);
 
+        //if there a donor already for this chat?
+        $donor = Donor::where('chat_id', $this->chat->chat_id)->get();
+        if(! $donor->isEmpty()) {
+            if (!empty($donor->phone)) {
+                //already registered!
+
+                //do we have blood type?
+                if (empty($donor)) {
+                    $this->askForBloodType();
+                    return;
+                }
+
+                //show 'welcome back' message
+                $this->chat
+                    ->markdown(__('messages.message.welcome_back'))
+                    ->send();
+            }
+        }
+
         if (!empty($this->message)) {
             try {
                 $this->chat->name = $this->message->from()->firstName() . ' ' . $this->message->from()->lastName();
@@ -27,9 +48,6 @@ class DonorWebhookHandler extends WebhookHandler
                 $this->reply("Помилка збереження.")->send();
             }
         }
-
-        // maybe we have a record already?
-        //return $this->confirmationExistingUser();
 
         $this->chat
             ->markdown(__('messages.message.welcome'))
@@ -43,21 +61,36 @@ class DonorWebhookHandler extends WebhookHandler
     {
         //first, do some cleanup
         $this->chat->deleteKeyboard($this->messageId)->send();
-        $this->chat->markdown('*+380123456578*')->send();
+
+        $phone = '+380123456578';
+        $this->chat->markdown('*{$phone}*')->send();
 
         //take the phone number and look up in the database
+        $donor = Donor::where('phone', $phone)->get();
+        if(! $donor->isEmpty()) {
+            if (!empty($donor->phone)) {
+                //already registered!
 
-        //if it's there - skip to confirmation
-        //return $this->confirmationExistingUser();
+                //show 'welcome back' message
+                $this->chat
+                    ->markdown(__('messages.message.welcome_back'))
+                    ->send();
+            }
+        }
 
         //if it's new user, walk through the registration process
         try {
-            $this->chat->phone = '+380123456578';
+            $this->chat->phone = $phone;
             $this->chat->save();
         } catch (Exception $e) {
             $this->reply("Помилка збереження.")->send();
         }
 
+        $this->askForBloodType();
+    }
+
+    private function askForBloodType(): void
+    {
         //ask for blood type
         $this->chat
             ->markdown(__('messages.message.your_blood_type'))
@@ -106,6 +139,8 @@ class DonorWebhookHandler extends WebhookHandler
 
         $this->chat->markdown("*{$type}{$rh}*")->send();
 
+        // @todo when pre-existing user changes blood type, we send message to admin to update that in Google Sheet
+
         //now ask for name
         $this->chat
             ->markdown(__('messages.message.your_name'))
@@ -138,6 +173,7 @@ class DonorWebhookHandler extends WebhookHandler
             "Група крові" => $this->chat->blood_type,
             "Резус-фактор" => $this->chat->blood_rh,
             "Ваш мобільный телефон" => $this->chat->phone,
+            "Telegram ID" => $this->chat->chat_id
         ];
         try {
             Sheets::spreadsheet(config('google.spreadsheet_id'))
@@ -149,8 +185,4 @@ class DonorWebhookHandler extends WebhookHandler
         return true;
     }
 
-    private function confirmationExistingUser()
-    {
-
-    }
 }
