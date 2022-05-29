@@ -11,9 +11,15 @@ return new class () extends Migration {
             $table->id();
             $table->string('chat_id');
 
-            $table->foreignId('telegraph_bot_id')->constrained('telegraph_bots')->cascadeOnDelete();
+            $table->foreignId('telegraph_bot_id')
+                ->constrained('telegraph_bots')
+                ->cascadeOnUpdate()
+                ->cascadeOnDelete();
 
-            $table->foreignId('donor_id')->constrained('donors')->cascadeOnDelete();
+            $table->foreignId('donor_id')
+                ->constrained('donors')
+                ->cascadeOnUpdate()
+                ->cascadeOnDelete();
 
             $table->timestamps();
 

@@ -14,7 +14,12 @@ return new class extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->foreignId('preferred_location_id')->constrained('locations')->after('current_team_id')->nullable()->nullOnDelete();
+            $table->foreignId('preferred_location_id')
+                ->nullable()
+                ->constrained('locations')
+                ->after('current_team_id')
+                ->cascadeOnUpdate()
+                ->nullOnDelete();
         });
     }
 

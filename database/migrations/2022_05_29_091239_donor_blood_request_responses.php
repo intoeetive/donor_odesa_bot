@@ -16,9 +16,21 @@ return new class extends Migration
         Schema::create('donor_blood_request_reponses', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('donor_id')->constrained('donors')->nullable()->nullOnDelete();
-            $table->foreignId('location_id')->constrained('locations')->nullable()->nullOnDelete();
-            $table->foreignId('blood_request_id')->constrained('blood_requests')->nullable()->nullOnDelete();
+            $table->foreignId('donor_id')
+                ->nullable()
+                ->constrained('donors')
+                ->cascadeOnUpdate()
+                ->nullOnDelete();
+            $table->foreignId('location_id')
+                ->nullable()
+                ->constrained('locations')
+                ->cascadeOnUpdate()
+                ->nullOnDelete();
+            $table->foreignId('blood_request_id')
+                ->nullable()
+                ->constrained('blood_requests')
+                ->cascadeOnUpdate()
+                ->nullOnDelete();
 
             $table->unsignedTinyInteger('no_response_contras')->nullable(); // 1 - no contraindications, can be accepted as donor
 
