@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('blood_requests', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('owner_id')->constrained('users')->nullable()->nullOnDelete();
+            $table->foreignId('owner_id')->nullable()->constrained('users')->nullOnDelete();
 
             $table->unsignedTinyInteger('blood_type_id');
 
