@@ -25,7 +25,7 @@ return new class () extends Migration {
             $table->index(['weight_ok']);
             $table->index(['no_contras']);
             $table->index(['last_donorship_date']);
-            $table->index(['blood_type']);
+            $table->index(['blood_type_id']);
         });
     }
 
