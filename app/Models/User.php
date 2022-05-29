@@ -10,6 +10,11 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Jetstream\HasTeams;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
+
+use App\Models\Location;
 
 class User extends Authenticatable
 {
@@ -58,4 +63,22 @@ class User extends Authenticatable
     protected $appends = [
         'profile_photo_url',
     ];
+
+    public function locations(): MorphToMany
+    {
+        /** @phpstan-ignore-next-line */
+        return $this->morphedByMany(Location::class, 'user_location');
+    }
+
+    public function preferredLocation(): HasOne
+    {
+        /** @phpstan-ignore-next-line */
+        return $this->hasOne(Location::class, 'preferred_location_id');
+    }
+
+    public function bloodRequests(): HasMany
+    {
+        /** @phpstan-ignore-next-line */
+        return $this->hasMany(BloodRequest::class, 'owner_id');
+    }
 }

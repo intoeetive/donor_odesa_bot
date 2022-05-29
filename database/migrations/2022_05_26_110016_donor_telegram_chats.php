@@ -7,22 +7,18 @@ use Illuminate\Support\Facades\Schema;
 return new class () extends Migration {
     public function up(): void
     {
-        Schema::create('donor_chats', function (Blueprint $table) {
+        Schema::create('donor_telegram_chats', function (Blueprint $table) {
             $table->id();
             $table->string('chat_id');
-            $table->string('name')->nullable();
 
             $table->foreignId('telegraph_bot_id')->constrained('telegraph_bots')->cascadeOnDelete();
-            $table->string('phone')->nullable();
-            $table->enum('blood_type', ['', 'I (1)', 'II (2)', 'III (3)', 'IV (4)']);
-            $table->enum('blood_rh', ['', '+', '-']);
 
-            $table->date('last_request_date')->nullable();
-            $table->date('last_donor_date')->nullable();
+            $table->foreignId('donor_id')->constrained('donors')->cascadeOnDelete();
 
             $table->timestamps();
 
             $table->unique(['chat_id', 'telegraph_bot_id']);
+            $table->index(['donor_id']);
         });
     }
 };
