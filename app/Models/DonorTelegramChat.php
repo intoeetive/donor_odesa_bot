@@ -10,6 +10,6 @@ class DonorTelegramChat extends TelegraphChat
     public function donor(): HasOne
     {
         /** @phpstan-ignore-next-line */
-        return $this->hasOne(Donor::class, 'donor_id');
+        return $this->hasOne(Donor::class);
     }
 }

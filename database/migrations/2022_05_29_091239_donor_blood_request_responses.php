@@ -36,6 +36,6 @@ return new class extends Migration
      */
     public function down()
     {
-        //
+        Schema::dropIfExists('donor_blood_request_reponses');
     }
 };

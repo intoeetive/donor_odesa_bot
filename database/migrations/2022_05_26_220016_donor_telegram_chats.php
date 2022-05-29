@@ -21,4 +21,14 @@ return new class () extends Migration {
             $table->index(['donor_id']);
         });
     }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('donor_telegram_chats');
+    }
 };

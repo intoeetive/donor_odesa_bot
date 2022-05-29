@@ -10,8 +10,6 @@ return new class () extends Migration {
         Schema::create('donors', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('donor_telegram_chat_id')->constrained('donor_telegram_chats')->nullable()->nullOnDelete();
-
             $table->string('name')->nullable(); // Name
             $table->string('phone')->nullable(); // Phone number
             $table->unsignedInteger('birth_year')->nullable(); // Year of birth to calculate age
@@ -29,5 +27,15 @@ return new class () extends Migration {
             $table->index(['last_donorship_date']);
             $table->index(['blood_type']);
         });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('donors');
     }
 };
