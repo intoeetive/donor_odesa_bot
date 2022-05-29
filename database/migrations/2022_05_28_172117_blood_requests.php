@@ -30,7 +30,7 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->index(['blood_type']);
+            $table->index(['blood_type_id']);
         });
     }
 
