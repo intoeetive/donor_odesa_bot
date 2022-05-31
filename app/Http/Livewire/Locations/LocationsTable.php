@@ -24,6 +24,7 @@ class LocationsTable extends DataTableComponent
     public function configure(): void
     {
         $this->setPrimaryKey('id')
+            ->setAdditionalSelects(['locations.id as id'])
             ->setReorderEnabled()
             ->setSingleSortingDisabled()
             ->setHideReorderColumnUnlessReorderingEnabled()
@@ -64,34 +65,7 @@ class LocationsTable extends DataTableComponent
                 ->filter(function(Builder $builder, string $value) {
                     $builder->where('users.name', 'like', '%'.$value.'%');
                 }),
-            MultiSelectFilter::make('Tags')
-                ->options(
-                    Tag::query()
-                        ->orderBy('name')
-                        ->get()
-                        ->keyBy('id')
-                        ->map(fn($tag) => $tag->name)
-                        ->toArray()
-                )->filter(function(Builder $builder, array $values) {
-                    $builder->whereHas('tags', fn($query) => $query->whereIn('tags.id', $values));
-                })
-                ->setFilterPillValues([
-                    '3' => 'Tag 1',        
-                ]),
-            SelectFilter::make('E-mail Verified', 'email_verified_at')
-                ->setFilterPillTitle('Verified')
-                ->options([
-                    ''    => 'Any',
-                    'yes' => 'Yes',
-                    'no'  => 'No',
-                ])
-                ->filter(function(Builder $builder, string $value) {
-                    if ($value === 'yes') {
-                        $builder->whereNotNull('email_verified_at');
-                    } elseif ($value === 'no') {
-                        $builder->whereNull('email_verified_at');
-                    }
-                }),
+
             SelectFilter::make('Active')
                 ->setFilterPillTitle('User Status')
                 ->setFilterPillValues([
