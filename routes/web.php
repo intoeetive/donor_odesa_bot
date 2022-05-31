@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DonorsController;
+use App\Http\Controllers\BloodRequestsController;
+use App\Http\Controllers\RequestsResponsesController;
 use App\Http\Controllers\LocationsController;
 
 /*
@@ -23,5 +26,8 @@ Route::middleware([
         return view('dashboard');
     })->name('dashboard');
 
+    Route::resource('donors', DonorsController::class);
+    Route::resource('blood-requests', BloodRequestsController::class);
+    Route::resource('request-responses', RequestsResponsesController::class);
     Route::resource('locations', LocationsController::class);
 });
