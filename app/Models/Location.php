@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * Hospital / Location
@@ -19,10 +19,10 @@ class Location extends Model
         'bot_instructions',//instruction to show in bot after response is accepted
     ];
 
-    public function users(): MorphToMany
+    public function users(): BelongsToMany
     {
         /** @phpstan-ignore-next-line */
-        return $this->morphToMany(User::class, 'user_location');
+        return $this->belongsToMany(User::class, 'user_location');
     }
 
     public function bloodRequests(): HasMany

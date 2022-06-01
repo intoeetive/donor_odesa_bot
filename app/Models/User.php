@@ -12,7 +12,7 @@ use Laravel\Jetstream\HasTeams;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 use App\Models\Location;
 
@@ -64,10 +64,10 @@ class User extends Authenticatable
         'profile_photo_url',
     ];
 
-    public function locations(): MorphToMany
+    public function locations(): BelongsToMany
     {
         /** @phpstan-ignore-next-line */
-        return $this->morphedByMany(Location::class, 'user_location');
+        return $this->belongsToMany(Location::class, 'user_location');
     }
 
     public function preferredLocation(): HasOne

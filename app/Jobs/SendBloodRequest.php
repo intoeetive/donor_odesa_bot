@@ -10,6 +10,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
 use App\Models\BloodRequest;
+use App\Models\Donor;
 
 class SendBloodRequest implements ShouldQueue
 {
@@ -17,14 +18,17 @@ class SendBloodRequest implements ShouldQueue
 
     protected $bloodRequest;
 
+    protected $donor;
+
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct(BloodRequest $bloodRequest)
+    public function __construct(BloodRequest $bloodRequest, Donor $donor)
     {
         $this->bloodRequest = $bloodRequest->withoutRelations();
+        $this->donor = $donor->withoutRelations();
     }
 
     /**

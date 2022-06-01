@@ -9,7 +9,7 @@ use App\Models\Donor;
 
 class SyncFromGoogleSheet extends Command
 {
-    protected $signature = 'sheets:get';
+    protected $signature = 'donor:sync-from-google';
 
     protected $description = 'Synchronize data from Google Sheet';
 

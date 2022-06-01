@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         //$schedule->command('sheets:get')->everyThirtyMinutes();//->hourly();
+        $schedule->command('donor:send-requests')->everyTenMinutes();
     }
 
     /**

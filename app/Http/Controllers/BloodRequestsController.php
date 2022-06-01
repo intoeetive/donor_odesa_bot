@@ -6,6 +6,7 @@ use App\Models\BloodRequest;
 use App\Models\BloodType;
 use App\Models\Location;
 use App\Jobs\SendBloodRequest;
+use App\Console\Commands\CheckBloodRequestAreClosed;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -41,7 +42,7 @@ class BloodRequestsController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Upon submission, we create job which will create sending jobs (and clone itself, if necessary)
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
@@ -53,20 +54,20 @@ class BloodRequestsController extends Controller
             'name' => ['required', 'string', 'max:255'],
         ])->validate();*/
 
-        return DB::transaction(function () use ($input) {
-            return tap(BloodRequest::create([
-                'location_id' => $input['location_id'],
-                'blood_type_id' => $input['blood_type_id'],
-                'qty' => $input['qty'],
-            ]), function (BloodRequest $bloodRequest) {
-                $sendRequestJob = new SendBloodRequest($bloodRequest);
-                dispatch($sendRequestJob);
-            });
-        });
+        $bloodRequest = BloodRequest::create([
+            'location_id' => $input['location_id'],
+            'blood_type_id' => $input['type'],
+            'qty' => $input['qty'],
+        ]);
+        $bloodRequest->owner_id = auth()->user()->id;
+        $bloodRequest->save();
+
+        $sendRequestCommand = new CheckBloodRequestAreClosed();
+        $sendRequestCommand->handle();
 
         return $request->wantsJson()
                     ? new JsonResponse('', 200)
-                    : back()->with('status', 'two-factor-authentication-enabled');
+                    : back()->banner(__('Blood request sent.'));
     }
 
     /**

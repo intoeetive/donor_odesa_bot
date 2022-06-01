@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * Donoe
@@ -31,5 +32,16 @@ class Donor extends Model
     {
         /** @phpstan-ignore-next-line */
         return $this->hasMany(DonorBloodRequestResponse::class);
+    }
+
+    /**
+     * Blood request notifications sent to this donor
+     *
+     * @return BelongsToMany
+     */
+    public function bloodRequests(): BelongsToMany
+    {
+        /** @phpstan-ignore-next-line */
+        return $this->belongsToMany(BloodRequest::class, 'blood_request_donors');
     }
 }
