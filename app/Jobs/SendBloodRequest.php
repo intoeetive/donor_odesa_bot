@@ -8,6 +8,10 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use DefStudio\Telegraph\Models\TelegraphChat;
+use DefStudio\Telegraph\Keyboard\Button;
+use DefStudio\Telegraph\Keyboard\Keyboard;
+use Carbon\Carbon;
 
 use App\Models\BloodRequest;
 use App\Models\Donor;
@@ -20,6 +24,8 @@ class SendBloodRequest implements ShouldQueue
 
     protected $donor;
 
+    protected $chat;
+
     /**
      * Create a new job instance.
      *
@@ -28,7 +34,7 @@ class SendBloodRequest implements ShouldQueue
     public function __construct(BloodRequest $bloodRequest, Donor $donor)
     {
         $this->bloodRequest = $bloodRequest->withoutRelations();
-        $this->donor = $donor->withoutRelations();
+        $this->donor = $donor;
     }
 
     /**
@@ -39,6 +45,12 @@ class SendBloodRequest implements ShouldQueue
      */
     public function handle()
     {
-        //
+        $this->chat = $this->donor->telegramChat();
+        $this->chat
+            ->markdown(__('Потрібна саме ваша кров!'))
+            ->keyboard(Keyboard::make()->buttons([
+                Button::make(__('Хочу і можу!'))->action('respondDonorRequest'),
+            ]))
+            ->send();
     }
 }

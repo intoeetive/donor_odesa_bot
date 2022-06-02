@@ -8,9 +8,11 @@ use DefStudio\Telegraph\Keyboard\Keyboard;
 use DefStudio\Telegraph\Enums\ChatActions;
 use DefStudio\Telegraph\Telegraph;
 use Revolution\Google\Sheets\Facades\Sheets;
+use Illuminate\Support\Facades\Storage;
 use Exception;
 
 use App\Models\Donor;
+use App\Models\BloodType;
 
 class DonorWebhookHandler extends WebhookHandler
 {
@@ -26,18 +28,17 @@ class DonorWebhookHandler extends WebhookHandler
         if(! $donor->isEmpty()) {
             if (!empty($donor->phone)) {
                 //already registered!
-
-                //do we have blood type?
-                if (empty($donor)) {
-                    $this->askForBloodType();
-                    return;
-                }
-
-                //show 'welcome back' message
+                $this->welcomeBack($donor);
+            } else {
                 $this->chat
-                    ->markdown(__('messages.message.welcome_back'))
+                    ->markdown(__('messages.message.welcome'))
                     ->send();
+                $this->requestMissingDonorData('phone');
             }
+        } else {
+            $this->chat
+                ->markdown(__('messages.message.welcome'))
+                ->send();
         }
 
         if (!empty($this->message)) {
@@ -45,19 +46,129 @@ class DonorWebhookHandler extends WebhookHandler
                 $this->chat->name = $this->message->from()->firstName() . ' ' . $this->message->from()->lastName();
                 $this->chat->save();
             } catch (Exception $e) {
-                $this->reply("Помилка збереження.")->send();
+                $this->reply("Помилка збереження.");
             }
         }
-
-        $this->chat
-            ->markdown(__('messages.message.welcome'))
-            ->keyboard(Keyboard::make()->buttons([
-                Button::make(__('messages.button.sharePhoneNumber'))->action('sharePhoneNumber')->param('id', '42'),
-            ]))
-            ->send();
     }
 
-    public function sharePhoneNumber(): void
+    /**
+     * Donor returning back
+     * welcome and collect missing data
+     *
+     * @param Donor $donor
+     * @return void
+     */
+    private function welcomeBack(Donor $donor)
+    {
+        //do we have all data?
+        $missingData = $this->checkMissingDonorData($donor);
+        if (!empty($missingData)) {
+            $this->chat
+                ->markdown(__('messages.message.welcome_back_data_missing'))
+                ->send();
+            $this->requestMissingDonorData($missingData);
+        } else {
+            //show 'welcome back' message
+            $this->chat
+                ->markdown(__('messages.message.welcome_back'))
+                ->send();
+        }
+    }
+
+    /**
+     * Return the next missing piece of data that we need to ask
+     * Keeping each check individual because we might need different order
+     *
+     * @param Donor $donor
+     * @return string property
+     */
+    private function checkMissingDonorData(Donor $donor)
+    {
+        if (empty($donor->phone)) {
+            return 'phone';
+        }
+        if (empty($donor->name)) {
+            return 'name';
+        }
+        if ($donor->blood_type_id === null) {
+            return 'blood_type_id';
+        }
+        if ($donor->birth_year === null) {
+            return 'birth_year';
+        }
+        if ($donor->weight_ok === null) {
+            return 'weight_ok';
+        }
+        if ($donor->no_contras === null) {
+            return 'no_contras';
+        }
+        return false;
+    }
+
+    /**
+     * Request donor data for given key
+     *
+     * @param string $property
+     * @return void
+     */
+    private function requestMissingDonorData($property)
+    {
+        $this->chat->deleteKeyboard($this->messageId)->send();
+
+        $message = $this->chat->markdown(__('messages.request.' . $property));
+        $keyboard = $this->buildMessageKeyboard($property);
+        if (!empty($keyboard)) {
+            $message->keyboard($keyboard);
+        }
+        $message->send();
+    }
+
+    /**
+     * Build the buttons for each data request
+     *
+     * @param string $property
+     * @return Keyboard
+     */
+    private function buildMessageKeyboard($property)
+    {
+        switch ($property) {
+            case 'blood_type_id':
+                $buttons = [];
+                foreach (BloodType::BLOOD_TYPES as $id => $name)
+                {
+                    $buttons[] = Button::make($name)->action('store_' . $property)->param($property, $id);
+                }
+                $keyboard = Keyboard::make()->buttons($buttons)->chunk(2);
+                break;
+            case 'phone':
+                $keyboard = Keyboard::make()->buttons([
+                    Button::make(__('messages.button.share_' . $property))->action('share_' . $property),
+                ]);
+                break;
+            case 'name':
+                $keyboard = Keyboard::make()->buttons([
+                    Button::make(__('messages.button.share_' . $property))->action('share_' . $property),
+                ]);
+                break;
+            default:
+                $keyboard = null;
+                break;
+        }
+        return $keyboard;
+    }
+
+    /**
+     * Show 'donor denied' message
+     */
+    private function denyDonor($reason = '')
+    {
+        $this->chat
+            ->markdown(__('messages.request.not_acceptable' . (!empty($reason) ? '.' . $reason : '')))
+            ->send();
+        return false;
+    }
+
+    public function share_phone(): void
     {
         //first, do some cleanup
         $this->chat->deleteKeyboard($this->messageId)->send();
@@ -68,121 +179,158 @@ class DonorWebhookHandler extends WebhookHandler
         //take the phone number and look up in the database
         $donor = Donor::where('phone', $phone)->get();
         if(! $donor->isEmpty()) {
-            if (!empty($donor->phone)) {
-                //already registered!
-
-                //show 'welcome back' message
-                $this->chat
-                    ->markdown(__('messages.message.welcome_back'))
-                    ->send();
+            //associate donor with this chat
+            try {
+                $this->chat->donor = $donor;
+                $this->chat->save();
+            } catch (Exception $e) {
+                $this->reply("Помилка збереження.");
             }
+            $this->welcomeBack($donor);
+        } else {
+            $donor = Donor::create([
+                'phone' => $phone
+            ]);
+            $donor->telegramChat = $this->chat;
         }
 
-        //if it's new user, walk through the registration process
-        try {
-            $this->chat->phone = $phone;
-            $this->chat->save();
-        } catch (Exception $e) {
-            $this->reply("Помилка збереження.")->send();
-        }
-
-        $this->askForBloodType();
+        $missingData = $this->checkMissingDonorData($donor);
+        $this->requestMissingDonorData($missingData);
     }
 
-    private function askForBloodType(): void
+    public function share_name(): void
     {
-        //ask for blood type
+        //first, do some cleanup
+        $this->chat->deleteKeyboard($this->messageId)->send();
+
+        $data = $this->message->from()->firstName() . ' ' . $this->message->from()->lastName();
+        $this->chat->markdown('*{$data}*')->send();
+
+        try {
+            $this->chat->donor->name = $data;
+            $this->chat->donor->save();
+        } catch (Exception $e) {
+            $this->reply("Помилка збереження.");
+        }
+
+        $missingData = $this->checkMissingDonorData($this->chat->donor);
+        $this->requestMissingDonorData($missingData);
+    }
+
+    public function share_blood_type_id(): void
+    {
+        //first, do some cleanup
+        $this->chat->deleteKeyboard($this->messageId)->send();
+
+        $data = $this->data->get('blood_type_id');
+        $this->chat->markdown('*{$data}*')->send();
+
+        try {
+            $this->chat->donor->blood_type_id = $data;
+            $this->chat->donor->save();
+        } catch (Exception $e) {
+            $this->reply("Помилка збереження.");
+        }
+
+        $missingData = $this->checkMissingDonorData($this->chat->donor);
+        $this->requestMissingDonorData($missingData);
+    }
+
+    public function share_birth_year(): void
+    {
+        //first, do some cleanup
+        $this->chat->deleteKeyboard($this->messageId)->send();
+
+        $data = $this->data->get('birth_year');
+        $this->chat->markdown('*{$data}*')->send();
+
+        $requiredYear = Carbon::now()->year - 18;
+        if ($data < $requiredYear) {
+            return $this->denyDonor('birth_year');
+        }
+
+        try {
+            $this->chat->donor->birth_year = $data;
+            $this->chat->donor->save();
+        } catch (Exception $e) {
+            $this->reply("Помилка збереження.");
+        }
+
+        $missingData = $this->checkMissingDonorData($this->chat->donor);
+        $this->requestMissingDonorData($missingData);
+    }
+
+    public function share_weight_ok(): void
+    {
+        //first, do some cleanup
+        $this->chat->deleteKeyboard($this->messageId)->send();
+
+        $data = $this->data->get('weight_ok');
+        $this->chat->markdown('*{$data}*')->send();
+
+        if ($data < 55) {
+            return $this->denyDonor('weight_ok');
+        }
+
+        try {
+            $this->chat->donor->weight_ok = 1;
+            $this->chat->donor->save();
+        } catch (Exception $e) {
+            $this->reply("Помилка збереження.");
+        }
+
+        $missingData = $this->checkMissingDonorData($this->chat->donor);
+        $this->requestMissingDonorData($missingData);
+    }
+
+    public function share_no_contras(): void
+    {
+        //first, do some cleanup
+        $this->chat->deleteKeyboard($this->messageId)->send();
+
+        $data = $this->data->get('no_contras');
+        $this->chat->markdown('*{$data}*')->send();
+
+        if ($data < 1) {
+            return $this->denyDonor('no_contras');
+        }
+
+        try {
+            $this->chat->donor->weight_ok = 1;
+            $this->chat->donor->save();
+        } catch (Exception $e) {
+            $this->reply("Помилка збереження.");
+        }
+
+        //last step, show them success message
         $this->chat
-            ->markdown(__('messages.message.your_blood_type'))
-            ->keyboard(Keyboard::make()->buttons([
-                Button::make('I+ (O+)')->action('shareBloodType')->param('type', '1')->param('rh', '+'),
-                Button::make('II+ (A+)')->action('shareBloodType')->param('type', '2')->param('rh', '+'),
-                Button::make('III+ (B+)')->action('shareBloodType')->param('type', '3')->param('rh', '+'),
-                Button::make('IV+ (AB+)')->action('shareBloodType')->param('type', '4')->param('rh', '+'),
-                Button::make('I- (O-)')->action('shareBloodType')->param('type', '1')->param('rh', '-'),
-                Button::make('II- (A-)')->action('shareBloodType')->param('type', '2')->param('rh', '-'),
-                Button::make('III- (B-)')->action('shareBloodType')->param('type', '3')->param('rh', '-'),
-                Button::make('IV- (AB-)')->action('shareBloodType')->param('type', '4')->param('rh', '-'),
-            ])->chunk(2))
+            ->markdown(__('messages.request.thank_you'))
             ->send();
     }
 
-    public function shareBloodType(): void
+    /**
+     * When user received donorship invitation
+     *
+     * @return void
+     */
+    public function respondDonorRequest()
     {
-        $this->chat->deleteKeyboard($this->messageId)->send();
-        //record the blood type
-
-        switch ($this->data->get('type')) {
-            case '1':
-                $type = 'I (1)';
-                break;
-            case '2':
-                $type = 'II (2)';
-                break;
-            case '3':
-                $type = 'III (3)';
-                break;
-            case '4':
-            default:
-                $type = 'IV (4)';
-                break;
-        }
-        $rh = $this->data->get('rh', '+');
-
-        try {
-            $this->chat->blood_type = $type;
-            $this->chat->blood_rh = $rh;
-            $this->chat->save();
-        } catch (Exception $e) {
-            $this->reply("Помилка збереження.")->send();
-        }
-
-        $this->chat->markdown("*{$type}{$rh}*")->send();
-
-        // @todo when pre-existing user changes blood type, we send message to admin to update that in Google Sheet
-
-        //now ask for name
         $this->chat
-            ->markdown(__('messages.message.your_name'))
+            ->photo(Storage::path('public/contras.jpg'))
+            ->markdown(__('messages.response.thank_you'))
             ->keyboard(Keyboard::make()->buttons([
-                Button::make(__('messages.button.shareName'))->action('shareName')->param('id', '42'),
+                Button::make(__('messages.button.yes_i_will_do_it'))->action('recordDonorResponse'),
             ]))
             ->send();
     }
 
-    public function shareName()
+    /**
+     * Record donor response into donor_blood_request_responses 
+     *
+     * @return void
+     */
+    public function recordDonorResponse()
     {
-        $this->chat->deleteKeyboard($this->messageId)->send();
-        //record the name
 
-        $this->chat->markdown("*{$this->chat->name}*")->send();
-        //sync the data to Google Sheet
-        $this->sendDataToGoogleSheet();
-
-        //show them confirmation message
-        $this->chat
-            ->markdown(__('messages.message.thank_you'))
-            ->send();
     }
-
-    private function sendDataToGoogleSheet()
-    {
-        $append = [
-            "Отметка времени" => "",
-            "Прізвище, Ім'я" => $this->chat->name,
-            "Група крові" => $this->chat->blood_type,
-            "Резус-фактор" => $this->chat->blood_rh,
-            "Ваш мобільный телефон" => $this->chat->phone,
-            "Telegram ID" => $this->chat->chat_id
-        ];
-        try {
-            Sheets::spreadsheet(config('google.spreadsheet_id'))
-              ->sheetById(config('google.sheet_id'))
-              ->append([$append]);
-        } catch (\Google\Service\Exception $e) {
-            $this->chat->reply("Помилка збереження данних")->send();
-        }
-        return true;
-    }
-
 }
