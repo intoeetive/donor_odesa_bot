@@ -15,7 +15,7 @@ class RequestsResponsesController extends Controller
      */
     public function index()
     {
-        //
+        return view('responses.index');
     }
 
     /**

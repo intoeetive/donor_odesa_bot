@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Livewire\Locations;
+namespace App\Http\Livewire;
 
 use App\Models\Location;
 
@@ -16,7 +16,7 @@ use Rappasoft\LaravelLivewireTables\Views\Filters\MultiSelectFilter;
 use Rappasoft\LaravelLivewireTables\Views\Filters\DateFilter;
 use Rappasoft\LaravelLivewireTables\Views\Filters\TextFilter;
 
-class LocationsTable extends DataTableComponent
+class DonorsTable extends DataTableComponent
 {
 
     protected $model = Location::class;

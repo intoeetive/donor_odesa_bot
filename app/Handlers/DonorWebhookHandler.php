@@ -9,10 +9,13 @@ use DefStudio\Telegraph\Enums\ChatActions;
 use DefStudio\Telegraph\Telegraph;
 use Revolution\Google\Sheets\Facades\Sheets;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 use Exception;
 
 use App\Models\Donor;
 use App\Models\BloodType;
+use App\Models\BloodRequest;
+use App\Models\DonorBloodRequestResponse;
 
 class DonorWebhookHandler extends WebhookHandler
 {
@@ -150,6 +153,23 @@ class DonorWebhookHandler extends WebhookHandler
                     Button::make(__('messages.button.share_' . $property))->action('share_' . $property),
                 ]);
                 break;
+            case 'birth_year':
+                $keyboard = Keyboard::make()->buttons([
+                    Button::make(__('messages.button.share_' . $property))->action('share_' . $property),
+                ]);
+                break;
+            case 'weight_ok':
+                $keyboard = Keyboard::make()->buttons([
+                    Button::make(__('messages.button.more_55_kg'))->action('share_' . $property)->property('weight_ok', 1),
+                    Button::make(__('messages.button.less_55_kg'))->action('share_' . $property)->property('weight_ok', 0),
+                ]);
+                break;
+            case 'no_contras':
+                $keyboard = Keyboard::make()->buttons([
+                    Button::make(__('messages.button.have_no_contraindications'))->action('share_' . $property)->property('no_contras', 1),
+                    Button::make(__('messages.button.have_contraindications'))->action('share_' . $property)->property('no_contras', 0),
+                ]);
+                break;
             default:
                 $keyboard = null;
                 break;
@@ -159,8 +179,9 @@ class DonorWebhookHandler extends WebhookHandler
 
     /**
      * Show 'donor denied' message
+     * @return bool
      */
-    private function denyDonor($reason = '')
+    private function denyDonor($reason = ''): bool
     {
         $this->chat
             ->markdown(__('messages.request.not_acceptable' . (!empty($reason) ? '.' . $reason : '')))
@@ -192,6 +213,7 @@ class DonorWebhookHandler extends WebhookHandler
                 'phone' => $phone
             ]);
             $donor->telegramChat = $this->chat;
+            $donor->save();
         }
 
         $missingData = $this->checkMissingDonorData($donor);
@@ -242,11 +264,14 @@ class DonorWebhookHandler extends WebhookHandler
         $this->chat->deleteKeyboard($this->messageId)->send();
 
         $data = $this->data->get('birth_year');
+        $data = 2000;
         $this->chat->markdown('*{$data}*')->send();
 
-        $requiredYear = Carbon::now()->year - 18;
-        if ($data < $requiredYear) {
-            return $this->denyDonor('birth_year');
+        $maxYear = Carbon::now()->year - 18;
+        $minYear = Carbon::now()->year - 64;
+        if ($data < $maxYear || $data < $minYear) {
+            $this->denyDonor('birth_year');
+            return;
         }
 
         try {
@@ -268,8 +293,9 @@ class DonorWebhookHandler extends WebhookHandler
         $data = $this->data->get('weight_ok');
         $this->chat->markdown('*{$data}*')->send();
 
-        if ($data < 55) {
-            return $this->denyDonor('weight_ok');
+        if ($data < 1) {
+            $this->denyDonor('weight_ok');
+            return
         }
 
         try {
@@ -292,7 +318,8 @@ class DonorWebhookHandler extends WebhookHandler
         $this->chat->markdown('*{$data}*')->send();
 
         if ($data < 1) {
-            return $this->denyDonor('no_contras');
+            $this->denyDonor('no_contras');
+            return
         }
 
         try {
@@ -315,11 +342,20 @@ class DonorWebhookHandler extends WebhookHandler
      */
     public function respondDonorRequest()
     {
+        if ($this->data->get('opt_in') < 1) {
+            $this->chat
+                ->markdown(__('messages.response.see_you_next_time'))
+                ->send();
+            return;
+        }
+
+        $blood_request_id = (int) $this->data->get('blood_request_id');
         $this->chat
             ->photo(Storage::path('public/contras.jpg'))
             ->markdown(__('messages.response.thank_you'))
             ->keyboard(Keyboard::make()->buttons([
-                Button::make(__('messages.button.yes_i_will_do_it'))->action('recordDonorResponse'),
+                Button::make(__('messages.button.yes_i_will_do_it'))->action('recordDonorResponse')->param('blood_request_id', $blood_request_id)->param('no_response_contras', 1),
+                Button::make(__('messages.button.no_i_can_not'))->action('recordDonorResponse')->param('blood_request_id', $blood_request_id)->param('no_response_contras', 0),
             ]))
             ->send();
     }
@@ -331,6 +367,30 @@ class DonorWebhookHandler extends WebhookHandler
      */
     public function recordDonorResponse()
     {
+        $this->chat->deleteKeyboard($this->messageId)->send();
 
+        $data = $this->data->get('no_response_contras');
+
+        if ($data < 1) {
+            $this->chat
+                ->markdown(__('messages.response.see_you_next_time'))
+                ->send();
+            return;
+        }
+
+        $bloodRequest = BloodRequest::find($this->data->get('blood_request_id'));
+
+        $response = DonorBloodRequestResponse::create([
+            'blood_request_id' => $bloodRequest->id,
+            'location_id' => $bloodRequest->location_id,
+            'donor_id' => $this->chat->donor->id,
+            'no_response_contras' => $data,
+            'confirmation_date' => Carbon::now()->toDateTimeString()
+        ]);
+        $response->save();
+
+        $this->chat
+                ->markdown($bloodRequest->location->bot_instructions)
+                ->send();
     }
 }

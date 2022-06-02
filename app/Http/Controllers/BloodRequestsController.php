@@ -22,7 +22,7 @@ class BloodRequestsController extends Controller
      */
     public function index()
     {
-        //
+        return view('requests.index');
     }
 
     /**
@@ -35,7 +35,7 @@ class BloodRequestsController extends Controller
         $locations = Location::query()->get();
         $bloodTypes = BloodType::BLOOD_TYPES;
         
-        return view('blood_requests.create', [
+        return view('requests.create', [
             'locations' => $locations,
             'bloodTypes' => $bloodTypes
         ]);

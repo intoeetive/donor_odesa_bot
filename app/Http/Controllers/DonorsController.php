@@ -14,7 +14,7 @@ class DonorsController extends Controller
      */
     public function index()
     {
-        //
+        return view('donors.index');
     }
 
     /**
