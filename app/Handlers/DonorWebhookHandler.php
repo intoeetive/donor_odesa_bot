@@ -160,14 +160,14 @@ class DonorWebhookHandler extends WebhookHandler
                 break;
             case 'weight_ok':
                 $keyboard = Keyboard::make()->buttons([
-                    Button::make(__('messages.button.more_55_kg'))->action('share_' . $property)->property('weight_ok', 1),
-                    Button::make(__('messages.button.less_55_kg'))->action('share_' . $property)->property('weight_ok', 0),
+                    Button::make(__('messages.button.more_55_kg'))->action('share_' . $property)->param('weight_ok', 1),
+                    Button::make(__('messages.button.less_55_kg'))->action('share_' . $property)->param('weight_ok', 0),
                 ]);
                 break;
             case 'no_contras':
                 $keyboard = Keyboard::make()->buttons([
-                    Button::make(__('messages.button.have_no_contraindications'))->action('share_' . $property)->property('no_contras', 1),
-                    Button::make(__('messages.button.have_contraindications'))->action('share_' . $property)->property('no_contras', 0),
+                    Button::make(__('messages.button.have_no_contraindications'))->action('share_' . $property)->param('no_contras', 1),
+                    Button::make(__('messages.button.have_contraindications'))->action('share_' . $property)->param('no_contras', 0),
                 ]);
                 break;
             default:
@@ -295,7 +295,7 @@ class DonorWebhookHandler extends WebhookHandler
 
         if ($data < 1) {
             $this->denyDonor('weight_ok');
-            return
+            return;
         }
 
         try {
@@ -319,7 +319,7 @@ class DonorWebhookHandler extends WebhookHandler
 
         if ($data < 1) {
             $this->denyDonor('no_contras');
-            return
+            return;
         }
 
         try {
