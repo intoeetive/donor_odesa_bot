@@ -16,22 +16,22 @@ use App\Models\Donor;
 use App\Models\BloodType;
 use App\Models\BloodRequest;
 use App\Models\DonorBloodRequestResponse;
+use App\Models\DonorTelegramChat;
 
 class DonorWebhookHandler extends WebhookHandler
 {
     public function start(): void
     {
         //start with saving this chat
-        $this->bot->chats()->firstOrCreate([
+        $chat = $this->bot->chats()->firstOrCreate([
             'chat_id' => $this->chat->chat_id,
         ]);
 
         //if there a donor already for this chat?
-        $donor = Donor::where('chat_id', $this->chat->chat_id)->get();
-        if(! $donor->isEmpty()) {
-            if (!empty($donor->phone)) {
+        if(! $chat->donor->isEmpty()) {
+            if (!empty($chat->donor->phone)) {
                 //already registered!
-                $this->welcomeBack($donor);
+                $this->welcomeBack($chat->donor);
             } else {
                 $this->chat
                     ->markdown(__('messages.message.welcome'))
