@@ -37,5 +37,6 @@ return [
     'models' => [
         'bot' => TelegraphBot::class,
         'chat' => DonorTelegramChat::class,
+        //'chat' => DefStudio\Telegraph\Models\TelegraphChat::class,
     ],
 ];
