@@ -10,6 +10,7 @@ return new class () extends Migration {
         Schema::create('donor_telegram_chats', function (Blueprint $table) {
             $table->id();
             $table->string('chat_id');
+            $table->string('name')->nullable();
 
             $table->foreignId('telegraph_bot_id')
                 ->constrained('telegraph_bots')
