@@ -2,6 +2,9 @@
 
 use App\Handlers\MainWebhookHandler;
 use DefStudio\Telegraph\Telegraph;
+use DefStudio\Telegraph\Models\TelegraphBot;
+
+use App\Models\DonorTelegramChat;
 
 return [
     /*
@@ -32,7 +35,7 @@ return [
      * Chat model must be or extend `DefStudio\Telegraph\Models\TelegraphChat::class`
      */
     'models' => [
-        'bot' => DefStudio\Telegraph\Models\TelegraphBot::class,
-        'chat' => App\Models\DonorChat::class,
+        'bot' => TelegraphBot::class,
+        'chat' => DonorTelegramChat::class,
     ],
 ];
