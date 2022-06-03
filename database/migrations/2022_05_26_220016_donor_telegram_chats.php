@@ -17,6 +17,7 @@ return new class () extends Migration {
                 ->cascadeOnDelete();
 
             $table->foreignId('donor_id')
+                ->nullable()
                 ->constrained('donors')
                 ->cascadeOnUpdate()
                 ->cascadeOnDelete();
