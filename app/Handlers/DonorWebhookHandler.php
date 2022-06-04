@@ -24,21 +24,21 @@ class DonorWebhookHandler extends WebhookHandler
     public function start(): void
     {
         //start with saving this chat
-        $chat = $this->bot->chats()->firstOrCreate([
+        $this->chat = $this->bot->chats()->firstOrCreate([
             'chat_id' => $this->chat->chat_id,
         ]);
 
         //if there a donor already for this chat?
-        if(! empty($chat->donor)) {
+        if(! empty($this->chat->donor)) {
             if (config('telegraph.debug_mode')) {
                 Log::debug('Donor exists');
             }
-            if (!empty($chat->donor->phone)) {
+            if (!empty($this->chat->donor->phone)) {
                 //already registered!
                 if (config('telegraph.debug_mode')) {
                     Log::debug('Donor has phone number');
                 }
-                $this->welcomeBack($chat->donor);
+                $this->welcomeBack($this->chat->donor);
             } else {
                 $this->chat
                     ->markdown(__('messages.message.welcome'))
@@ -83,7 +83,6 @@ class DonorWebhookHandler extends WebhookHandler
             $this->chat
                 ->markdown(__('messages.message.welcome_back_data_missing'))
                 ->send();
-            Log::debug('Requesting ', [$missingData]);
             $this->requestMissingDonorData($missingData);
         } else {
             //show 'welcome back' message
