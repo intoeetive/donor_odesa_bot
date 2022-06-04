@@ -30,8 +30,14 @@ class DonorWebhookHandler extends WebhookHandler
 
         //if there a donor already for this chat?
         if(! empty($chat->donor)) {
+            if (config('telegraph.debug_mode')) {
+                Log::debug('Donor exists');
+            }
             if (!empty($chat->donor->phone)) {
                 //already registered!
+                if (config('telegraph.debug_mode')) {
+                    Log::debug('Donor has phone number');
+                }
                 $this->welcomeBack($chat->donor);
             } else {
                 $this->chat
@@ -40,6 +46,9 @@ class DonorWebhookHandler extends WebhookHandler
                 $this->requestMissingDonorData('phone');
             }
         } else {
+            if (config('telegraph.debug_mode')) {
+                Log::debug('Donor does not exist');
+            }
             $this->chat
                 ->markdown(__('messages.message.welcome'))
                 ->send();
