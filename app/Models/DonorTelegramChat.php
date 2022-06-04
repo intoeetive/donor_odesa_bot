@@ -3,13 +3,13 @@
 namespace App\Models;
 
 use DefStudio\Telegraph\Models\TelegraphChat;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DonorTelegramChat extends TelegraphChat
 {
-    public function donor(): HasOne
+    public function donor(): BelongsTo
     {
         /** @phpstan-ignore-next-line */
-        return $this->hasOne(Donor::class);
+        return $this->belongsTo(Donor::class, 'chat_id');
     }
 }

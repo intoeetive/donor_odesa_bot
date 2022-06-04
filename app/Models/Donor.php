@@ -6,9 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
- * Donoe
+ * Donor
  */
 class Donor extends Model
 {
@@ -22,10 +23,10 @@ class Donor extends Model
         'last_donorship_date' //Date of last donorship
     ];
 
-    public function telegramChat(): BelongsTo
+    public function telegramChat(): HasOne
     {
         /** @phpstan-ignore-next-line */
-        return $this->belongsTo(DonorTelegramChat::class);
+        return $this->hasOne(DonorTelegramChat::class);
     }
 
     public function requestResponses(): HasMany
