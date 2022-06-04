@@ -76,10 +76,14 @@ class DonorWebhookHandler extends WebhookHandler
     {
         //do we have all data?
         $missingData = $this->checkMissingDonorData($donor);
+        if (config('telegraph.debug_mode')) {
+            Log::debug('Missing data:', [$missingData]);
+        }
         if (!empty($missingData)) {
             $this->chat
                 ->markdown(__('messages.message.welcome_back_data_missing'))
                 ->send();
+            Log::debug('Requesting ', [$missingData]);
             $this->requestMissingDonorData($missingData);
         } else {
             //show 'welcome back' message
