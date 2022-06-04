@@ -10,6 +10,6 @@ class DonorTelegramChat extends TelegraphChat
     public function donor(): BelongsTo
     {
         /** @phpstan-ignore-next-line */
-        return $this->belongsTo(Donor::class, 'id', 'chat_id');
+        return $this->belongsTo(Donor::class, 'chat_id');
     }
 }
