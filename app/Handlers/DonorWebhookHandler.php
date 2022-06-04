@@ -69,6 +69,9 @@ class DonorWebhookHandler extends WebhookHandler
      */
     private function welcomeBack(Donor $donor)
     {
+        if (config('telegraph.debug_mode')) {
+            Log::debug('welcomeBack');
+        }
         //do we have all data?
         $missingData = $this->checkMissingDonorData($donor);
         if (config('telegraph.debug_mode')) {
@@ -222,7 +225,11 @@ class DonorWebhookHandler extends WebhookHandler
         $this->chat->markdown('*' . $phone .'*')->send();
 
         //take the phone number and look up in the database
-        $donor = Donor::where('phone', $phone)->first();
+        if(! empty($this->chat->donor)) {
+            $donor = $this->chat->donor;
+        } else {
+            $donor = Donor::where('phone', $phone)->first();
+        }
         if(! empty($donor)) {
             //associate donor with this chat
             //try {
