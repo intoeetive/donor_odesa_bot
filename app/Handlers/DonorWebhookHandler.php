@@ -201,11 +201,11 @@ class DonorWebhookHandler extends WebhookHandler
         $this->chat->deleteKeyboard($this->messageId)->send();
 
         $phone = '+380123456578';
-        $this->chat->markdown('*{$phone}*')->send();
+        $this->chat->markdown('*' . $phone .'*')->send();
 
         //take the phone number and look up in the database
         $donor = Donor::where('phone', $phone)->first();
-        if(! $donor->isEmpty()) {
+        if(! is_empty($donor)) {
             //associate donor with this chat
             try {
                 $this->chat->donor = $donor;
