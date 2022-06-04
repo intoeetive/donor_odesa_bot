@@ -240,7 +240,7 @@ class DonorWebhookHandler extends WebhookHandler
             //}
             $this->welcomeBack($donor);
         } else {
-            $this->chat->donor()->create([
+            $donor = $this->chat->donor()->create([
                 'phone' => $phone
             ]);
         }
