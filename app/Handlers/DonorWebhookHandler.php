@@ -23,10 +23,14 @@ class DonorWebhookHandler extends WebhookHandler
 {
     public function start(): void
     {
-        //start with saving this chat
-        $this->chat = $this->bot->chats()->firstOrCreate([
-            'chat_id' => $this->chat->chat_id,
-        ]);
+        if (!empty($this->message)) {
+            try {
+                $this->chat->name = $this->message->from()->firstName() . ' ' . $this->message->from()->lastName();
+                $this->chat->save();
+            } catch (Exception $e) {
+                $this->reply("Помилка збереження.");
+            }
+        }
 
         //if there a donor already for this chat?
         if(! empty($this->chat->donor)) {
@@ -53,15 +57,6 @@ class DonorWebhookHandler extends WebhookHandler
                 ->markdown(__('messages.message.welcome'))
                 ->send();
             $this->requestMissingDonorData('phone');
-        }
-
-        if (!empty($this->message)) {
-            try {
-                $this->chat->name = $this->message->from()->firstName() . ' ' . $this->message->from()->lastName();
-                $this->chat->save();
-            } catch (Exception $e) {
-                $this->reply("Помилка збереження.");
-            }
         }
     }
 
