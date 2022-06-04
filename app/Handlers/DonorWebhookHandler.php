@@ -118,7 +118,7 @@ class DonorWebhookHandler extends WebhookHandler
      */
     private function requestMissingDonorData($property)
     {
-        $this->chat->deleteKeyboard($this->messageId)->send();
+        $this->cleanKeyboard();
 
         if ($property == 'no_contras') {
             $this->chat->photo(Storage::path('bot_files/contras.jpg'))->send();
@@ -200,10 +200,16 @@ class DonorWebhookHandler extends WebhookHandler
         return false;
     }
 
+    private function cleanKeyboard()
+    {
+        if (config('telegraph.debug_mode')) {
+            $this->chat->deleteKeyboard($this->messageId)->send();
+        }
+    }
+
     public function share_phone(): void
     {
-        //first, do some cleanup
-        $this->chat->deleteKeyboard($this->messageId)->send();
+        $this->cleanKeyboard();
 
         $phone = '+380123456578';
         $this->chat->markdown('*' . $phone .'*')->send();
@@ -233,10 +239,12 @@ class DonorWebhookHandler extends WebhookHandler
 
     public function share_name(): void
     {
-        //first, do some cleanup
-        $this->chat->deleteKeyboard($this->messageId)->send();
+        $this->cleanKeyboard();
 
-        $data = $this->message->from()->firstName() . ' ' . $this->message->from()->lastName();
+        if (config('telegraph.debug_mode')) {
+            Log::debug('Message: ', $this->callbackQuery->message()->toArray());
+        }
+        $data = $this->callbackQuery->message()->from()->firstName() . ' ' . $this->callbackQuery->message()->from()->lastName();
         $this->chat->markdown('*{$data}*')->send();
 
         try {
@@ -252,8 +260,7 @@ class DonorWebhookHandler extends WebhookHandler
 
     public function share_blood_type_id(): void
     {
-        //first, do some cleanup
-        $this->chat->deleteKeyboard($this->messageId)->send();
+        $this->cleanKeyboard();
 
         $data = $this->data->get('blood_type_id');
         $this->chat->markdown('*{$data}*')->send();
@@ -271,8 +278,7 @@ class DonorWebhookHandler extends WebhookHandler
 
     public function share_birth_year(): void
     {
-        //first, do some cleanup
-        $this->chat->deleteKeyboard($this->messageId)->send();
+        $this->cleanKeyboard();
 
         $data = $this->data->get('birth_year');
         $data = 2000;
@@ -298,8 +304,7 @@ class DonorWebhookHandler extends WebhookHandler
 
     public function share_weight_ok(): void
     {
-        //first, do some cleanup
-        $this->chat->deleteKeyboard($this->messageId)->send();
+        $this->cleanKeyboard();
 
         $data = $this->data->get('weight_ok');
         $this->chat->markdown('*{$data}*')->send();
@@ -322,8 +327,7 @@ class DonorWebhookHandler extends WebhookHandler
 
     public function share_no_contras(): void
     {
-        //first, do some cleanup
-        $this->chat->deleteKeyboard($this->messageId)->send();
+        $this->cleanKeyboard();
 
         $data = $this->data->get('no_contras');
         $this->chat->markdown('*{$data}*')->send();
@@ -378,7 +382,7 @@ class DonorWebhookHandler extends WebhookHandler
      */
     public function recordDonorResponse()
     {
-        $this->chat->deleteKeyboard($this->messageId)->send();
+        $this->cleanKeyboard();
 
         $data = $this->data->get('no_response_contras');
 
