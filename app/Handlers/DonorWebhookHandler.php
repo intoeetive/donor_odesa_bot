@@ -123,7 +123,7 @@ class DonorWebhookHandler extends WebhookHandler
         $message = $this->chat->markdown(__('messages.request.' . $property));
         $keyboard = $this->buildMessageKeyboard($property);
         if (config('telegraph.debug_mode')) {
-            Log::debug('Keyboard: ', $keyboard);
+            Log::debug('Keyboard: ', $keyboard->toArray());
         }
         if (!empty($keyboard)) {
             $message->keyboard($keyboard)->send();
