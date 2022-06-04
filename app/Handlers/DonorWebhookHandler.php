@@ -202,7 +202,7 @@ class DonorWebhookHandler extends WebhookHandler
 
     private function cleanKeyboard()
     {
-        if (config('telegraph.debug_mode')) {
+        if (! config('telegraph.debug_mode')) {
             $this->chat->deleteKeyboard($this->messageId)->send();
         }
     }
@@ -219,7 +219,7 @@ class DonorWebhookHandler extends WebhookHandler
         if(! empty($donor)) {
             //associate donor with this chat
             try {
-                $this->chat->donor = $donor;
+                $this->chat->donor()->associate($donor);
                 $this->chat->save();
             } catch (Exception $e) {
                 $this->reply("Помилка збереження.");
@@ -229,7 +229,7 @@ class DonorWebhookHandler extends WebhookHandler
             $donor = Donor::create([
                 'phone' => $phone
             ]);
-            $donor->telegramChat = $this->chat;
+            $donor->telegramChat()->associate($this->chat);
             $donor->save();
         }
 
