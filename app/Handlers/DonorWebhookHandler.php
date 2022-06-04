@@ -218,12 +218,12 @@ class DonorWebhookHandler extends WebhookHandler
         $donor = Donor::where('phone', $phone)->first();
         if(! empty($donor)) {
             //associate donor with this chat
-            try {
-                $this->chat->associate($donor);
+            //try {
+                $this->chat->donor()->associate($donor);
                 $this->chat->save();
-            } catch (Exception $e) {
-                $this->reply("Помилка збереження.");
-            }
+            //} catch (Exception $e) {
+            //    $this->reply("Помилка збереження.");
+            //}
             $this->welcomeBack($donor);
         } else {
             $this->chat->donor()->create([
