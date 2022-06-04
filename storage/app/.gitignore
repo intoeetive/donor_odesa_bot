@@ -1,3 +1,5 @@
 *
+!bot_files/
+!bot_files/*
 !public/
 !.gitignore

@@ -7,8 +7,8 @@ return [
 
 Щоб почати роботу з ботом, нам потрібен ваш номер телефону',
 
-    'message.your_blood_type' => 'Яка ваша група крові?',
-    'message.your_name' => 'Як до вас звертатися?',
+    'message.your_blood_type' => '',
+
     'message.thank_you' => 'Дякуємо за реєстрацію.
 
 Ми повідомимо, коли буде потрібна саме ваша група крові. 
@@ -24,9 +24,24 @@ return [
 
     'button.register' => 'Реєстрація донора',
     'button.alreadyRegistered' => 'Я вже реєструвався',
-    'button.share_phone' => 'Надати свій номер телефону',
-    'button.shareName' => 'Повідомити ім\'я',
+    
 
     'request.phone' => 'Для продовження нам потрібен ваш номер телефону',
+    'button.share_phone' => 'Надати свій номер телефону',
 
+    'request.name' => 'Щоб ми знали, як до вас звертатися, скажіть як вас звати',
+    'button.share_name' => 'Повідомити ім\'я',
+
+    'request.blood_type_id' => 'Яка ваша група крові?',
+
+    'request.birth_year' => 'Рік народження?',
+
+    'request.weigh_ok' => 'Для визначення чи можете ви стати донором, потрібна ваша вага',
+    'messages.button.more_55_kg' => 'Більше 55 кг',
+    'messages.button.less_55_kg' => 'Менше 55 кг',
+    
+    'request.no_contras' => 'Будь ласка перегляньте перелік і підтвердіть що у вас немає нічого зі списку',
+    
+    'messages.button.have_no_contraindications' => 'Ні, в мене нема протипоказань',
+    'messages.button.have_contraindications' => 'На жаль, маю протипоказання',
 ];

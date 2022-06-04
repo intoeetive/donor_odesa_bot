@@ -120,6 +120,10 @@ class DonorWebhookHandler extends WebhookHandler
     {
         $this->chat->deleteKeyboard($this->messageId)->send();
 
+        if ($property == 'no_contras') {
+            $this->chat->photo(Storage::path('bot_files/contras.jpg'))->send();
+        }
+
         $message = $this->chat->markdown(__('messages.request.' . $property));
         $keyboard = $this->buildMessageKeyboard($property);
         if (config('telegraph.debug_mode')) {
@@ -161,7 +165,8 @@ class DonorWebhookHandler extends WebhookHandler
                 break;
             case 'birth_year':
                 $keyboard = Keyboard::make()->buttons([
-                    Button::make(__('messages.button.share_' . $property))->action('share_' . $property),
+                    Button::make('1990')->action('share_' . $property)->param('birth_year', '1990'),
+                    Button::make('2008')->action('share_' . $property)->param('birth_year', '2008'),
                 ]);
                 break;
             case 'weight_ok':
@@ -205,7 +210,7 @@ class DonorWebhookHandler extends WebhookHandler
 
         //take the phone number and look up in the database
         $donor = Donor::where('phone', $phone)->first();
-        if(! is_empty($donor)) {
+        if(! empty($donor)) {
             //associate donor with this chat
             try {
                 $this->chat->donor = $donor;
@@ -357,7 +362,7 @@ class DonorWebhookHandler extends WebhookHandler
 
         $blood_request_id = (int) $this->data->get('blood_request_id');
         $this->chat
-            ->photo(Storage::path('public/contras.jpg'))
+            ->photo(Storage::path('bot_files/contras.jpg'))
             ->markdown(__('messages.response.thank_you'))
             ->keyboard(Keyboard::make()->buttons([
                 Button::make(__('messages.button.yes_i_will_do_it'))->action('recordDonorResponse')->param('blood_request_id', $blood_request_id)->param('no_response_contras', 1),
