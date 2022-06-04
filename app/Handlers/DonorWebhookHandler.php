@@ -42,6 +42,7 @@ class DonorWebhookHandler extends WebhookHandler
             $this->chat
                 ->markdown(__('messages.message.welcome'))
                 ->send();
+            $this->requestMissingDonorData('phone');
         }
 
         if (!empty($this->message)) {
