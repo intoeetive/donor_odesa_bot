@@ -24,6 +24,9 @@ return [
 
     'button.register' => 'Реєстрація донора',
     'button.alreadyRegistered' => 'Я вже реєструвався',
-    'button.sharePhoneNumber' => 'Надати свій номер телефону',
+    'button.share_phone' => 'Надати свій номер телефону',
     'button.shareName' => 'Повідомити ім\'я',
+
+    'request.phone' => 'Для продовження нам потрібен ваш номер телефону',
+
 ];

@@ -9,6 +9,7 @@ use DefStudio\Telegraph\Enums\ChatActions;
 use DefStudio\Telegraph\Telegraph;
 use Revolution\Google\Sheets\Facades\Sheets;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Exception;
 
@@ -121,6 +122,10 @@ class DonorWebhookHandler extends WebhookHandler
 
         $message = $this->chat->markdown(__('messages.request.' . $property));
         $keyboard = $this->buildMessageKeyboard($property);
+        if (config('telegraph.debug_mode')) {
+            Log::debug('Keyboard: ', $keyboard);
+            Log::debug('Keyboard: ', empty($keyboard));
+        }
         if (!empty($keyboard)) {
             $message->keyboard($keyboard);
         }
