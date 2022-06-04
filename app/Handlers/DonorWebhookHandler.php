@@ -204,7 +204,7 @@ class DonorWebhookHandler extends WebhookHandler
         $this->chat->markdown('*{$phone}*')->send();
 
         //take the phone number and look up in the database
-        $donor = Donor::where('phone', $phone)->get();
+        $donor = Donor::where('phone', $phone)->first();
         if(! $donor->isEmpty()) {
             //associate donor with this chat
             try {
