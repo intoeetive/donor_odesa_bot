@@ -124,12 +124,12 @@ class DonorWebhookHandler extends WebhookHandler
         $keyboard = $this->buildMessageKeyboard($property);
         if (config('telegraph.debug_mode')) {
             Log::debug('Keyboard: ', $keyboard);
-            Log::debug('Keyboard: ', empty($keyboard));
         }
         if (!empty($keyboard)) {
-            $message->keyboard($keyboard);
+            $message->keyboard($keyboard)->send();
+        } else {
+            $message->send();
         }
-        $message->send();
     }
 
     /**
