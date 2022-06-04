@@ -28,7 +28,7 @@ class DonorWebhookHandler extends WebhookHandler
         ]);
 
         //if there a donor already for this chat?
-        if(! $chat->donor->isEmpty()) {
+        if(! empty($chat->donor)) {
             if (!empty($chat->donor->phone)) {
                 //already registered!
                 $this->welcomeBack($chat->donor);
