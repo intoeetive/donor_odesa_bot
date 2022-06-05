@@ -55,11 +55,11 @@ class BloodRequestsController extends Controller
         ])->validate();*/
 
         $bloodRequest = BloodRequest::create([
-            'location_id' => $input['location_id'],
             'blood_type_id' => $input['type'],
             'qty' => $input['qty'],
         ]);
         $bloodRequest->owner_id = auth()->user()->id;
+        $bloodRequest->location_id = $input['location_id'];
         $bloodRequest->save();
 
         $sendRequestCommand = new CheckBloodRequestAreClosed();

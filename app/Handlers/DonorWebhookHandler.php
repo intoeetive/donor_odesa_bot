@@ -407,7 +407,7 @@ class DonorWebhookHandler extends WebhookHandler
 
         $blood_request_id = (int) $this->data->get('blood_request_id');
         $this->chat
-            //->photo(Storage::path('bot_files/contras.jpg'))
+            ->photo(Storage::path('bot_files/contras.jpg'))
             ->markdown(__('messages.response.thank_you'))
             ->keyboard(Keyboard::make()->buttons([
                 Button::make(__('messages.button.yes_i_will_do_it'))->action('recordDonorResponseYes')->param('blood_request_id', (string) $blood_request_id),
