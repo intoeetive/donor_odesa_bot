@@ -23,7 +23,7 @@ class DonorWebhookHandler extends WebhookHandler
 {
     public function start(): void
     {
-        if (!empty($this->message)) {
+        if (!empty($this->message) && empty($this->chat->name)) {
             try {
                 $this->chat->name = $this->message->from()->firstName() . ' ' . $this->message->from()->lastName();
                 $this->chat->save();
@@ -130,19 +130,29 @@ class DonorWebhookHandler extends WebhookHandler
     {
         $this->cleanKeyboard();
 
-        if ($property == 'no_contras') {
-            $this->chat->photo(Storage::path('bot_files/contras.jpg'))->send();
+        if (empty($property)) {
+            $this->chat
+                ->markdown(__('messages.request.thank_you'))
+                ->send();
+            return;
         }
 
-        $message = $this->chat->markdown(__('messages.request.' . $property));
-        $keyboard = $this->buildMessageKeyboard($property);
-        if (config('telegraph.debug_mode')) {
-            Log::debug('Keyboard: ', $keyboard->toArray());
+        if ($property == 'no_contras') {
+            $message = $this->chat->photo(Storage::path('bot_files/contras.jpg'))->markdown(__('messages.request.' . $property));
+        } else {
+            $message = $this->chat->markdown(__('messages.request.' . $property));
         }
+        $keyboard = $this->buildMessageKeyboard($property);
         if (!empty($keyboard)) {
+            if (config('telegraph.debug_mode')) {
+                Log::debug('Keyboard: ', $keyboard->toArray());
+            }
             $message->keyboard($keyboard)->send();
         } else {
             $message->send();
+        }
+        if (config('telegraph.debug_mode')) {
+            Log::debug('Requested: ', $message->toArray());
         }
     }
 
@@ -159,7 +169,7 @@ class DonorWebhookHandler extends WebhookHandler
                 $buttons = [];
                 foreach (BloodType::BLOOD_TYPES as $id => $name)
                 {
-                    $buttons[] = Button::make($name)->action('store_' . $property)->param($property, $id);
+                    $buttons[] = Button::make($name)->action('share_' . $property)->param($property, $id);
                 }
                 $keyboard = Keyboard::make()->buttons($buttons)->chunk(2);
                 break;
@@ -181,14 +191,14 @@ class DonorWebhookHandler extends WebhookHandler
                 break;
             case 'weight_ok':
                 $keyboard = Keyboard::make()->buttons([
-                    Button::make(__('messages.button.more_55_kg'))->action('share_' . $property)->param('weight_ok', 1),
-                    Button::make(__('messages.button.less_55_kg'))->action('share_' . $property)->param('weight_ok', 0),
+                    Button::make(__('messages.button.more_55_kg'))->action('share_' . $property)->param('weight_ok', '1'),
+                    Button::make(__('messages.button.less_55_kg'))->action('share_' . $property)->param('weight_ok', '0'),
                 ]);
                 break;
             case 'no_contras':
                 $keyboard = Keyboard::make()->buttons([
-                    Button::make(__('messages.button.have_no_contraindications'))->action('share_' . $property)->param('no_contras', 1),
-                    Button::make(__('messages.button.have_contraindications'))->action('share_' . $property)->param('no_contras', 0),
+                    Button::make(__('messages.button.have_no_contraindications'))->action('share_' . $property)->param('no_contras', '1'),
+                    Button::make(__('messages.button.have_contraindications'))->action('share_' . $property)->param('no_contras', '0'),
                 ]);
                 break;
             default:
@@ -243,6 +253,11 @@ class DonorWebhookHandler extends WebhookHandler
             $donor = $this->chat->donor()->create([
                 'phone' => $phone
             ]);
+            if (config('telegraph.debug_mode')) {
+                Log::debug('Donor created: ', $donor->toArray());
+            }
+            $this->chat->donor()->associate($donor);
+            $this->chat->save();
         }
 
         $missingData = $this->checkMissingDonorData($donor);
@@ -257,14 +272,15 @@ class DonorWebhookHandler extends WebhookHandler
             Log::debug('Message: ', $this->callbackQuery->message()->toArray());
         }
         $data = $this->callbackQuery->message()->from()->firstName() . ' ' . $this->callbackQuery->message()->from()->lastName();
-        $this->chat->markdown('*{$data}*')->send();
+        $this->chat->markdown('*' . $data . '*')->send();
 
-        try {
+
+        //try {
             $this->chat->donor->name = $data;
             $this->chat->donor->save();
-        } catch (Exception $e) {
-            $this->reply("Помилка збереження.");
-        }
+        //} catch (Exception $e) {
+        //    $this->reply("Помилка збереження.");
+        //}
 
         $missingData = $this->checkMissingDonorData($this->chat->donor);
         $this->requestMissingDonorData($missingData);
@@ -275,14 +291,14 @@ class DonorWebhookHandler extends WebhookHandler
         $this->cleanKeyboard();
 
         $data = $this->data->get('blood_type_id');
-        $this->chat->markdown('*{$data}*')->send();
+        $this->chat->markdown('*' . BloodType::BLOOD_TYPES[$data] . '*')->send();
 
-        try {
+        //try {
             $this->chat->donor->blood_type_id = $data;
             $this->chat->donor->save();
-        } catch (Exception $e) {
-            $this->reply("Помилка збереження.");
-        }
+        //} catch (Exception $e) {
+        //    $this->reply("Помилка збереження.");
+        //}
 
         $missingData = $this->checkMissingDonorData($this->chat->donor);
         $this->requestMissingDonorData($missingData);
@@ -293,24 +309,29 @@ class DonorWebhookHandler extends WebhookHandler
         $this->cleanKeyboard();
 
         $data = $this->data->get('birth_year');
-        $data = 2000;
-        $this->chat->markdown('*{$data}*')->send();
+        $this->chat->markdown('*' . $data . '*')->send();
 
         $maxYear = Carbon::now()->year - 18;
         $minYear = Carbon::now()->year - 64;
-        if ($data < $maxYear || $data < $minYear) {
+        if ($data > $maxYear || $data < $minYear) {
             $this->denyDonor('birth_year');
             return;
         }
 
-        try {
+        //try {
             $this->chat->donor->birth_year = $data;
             $this->chat->donor->save();
-        } catch (Exception $e) {
-            $this->reply("Помилка збереження.");
+        //} catch (Exception $e) {
+        //    $this->reply("Помилка збереження.");
+        //}
+        if (config('telegraph.debug_mode')) {
+            Log::debug('birth_year:', [ $this->chat->donor->birth_year]);
         }
 
         $missingData = $this->checkMissingDonorData($this->chat->donor);
+        if (config('telegraph.debug_mode')) {
+            Log::debug('Missing data:', [$missingData]);
+        }
         $this->requestMissingDonorData($missingData);
     }
 
@@ -319,19 +340,23 @@ class DonorWebhookHandler extends WebhookHandler
         $this->cleanKeyboard();
 
         $data = $this->data->get('weight_ok');
-        $this->chat->markdown('*{$data}*')->send();
+        $options = [
+            '0' => __('messages.button.less_55_kg'),
+            '1' => __('messages.button.more_55_kg'),
+        ];
+        $this->chat->markdown('*' . $options[$data] . '*')->send();
 
         if ($data < 1) {
             $this->denyDonor('weight_ok');
             return;
         }
 
-        try {
+        //try {
             $this->chat->donor->weight_ok = 1;
             $this->chat->donor->save();
-        } catch (Exception $e) {
-            $this->reply("Помилка збереження.");
-        }
+        //} catch (Exception $e) {
+        //    $this->reply("Помилка збереження.");
+        //}
 
         $missingData = $this->checkMissingDonorData($this->chat->donor);
         $this->requestMissingDonorData($missingData);
@@ -342,19 +367,23 @@ class DonorWebhookHandler extends WebhookHandler
         $this->cleanKeyboard();
 
         $data = $this->data->get('no_contras');
-        $this->chat->markdown('*{$data}*')->send();
+        $options = [
+            '0' => __('messages.button.have_contraindications'),
+            '1' => __('messages.button.have_no_contraindications'),
+        ];
+        $this->chat->markdown('*' . $options[$data] . '*')->send();
 
         if ($data < 1) {
             $this->denyDonor('no_contras');
             return;
         }
 
-        try {
-            $this->chat->donor->weight_ok = 1;
+        //try {
+            $this->chat->donor->no_contras = $data;
             $this->chat->donor->save();
-        } catch (Exception $e) {
-            $this->reply("Помилка збереження.");
-        }
+        //} catch (Exception $e) {
+        //    $this->reply("Помилка збереження.");
+        //}
 
         //last step, show them success message
         $this->chat
@@ -378,11 +407,11 @@ class DonorWebhookHandler extends WebhookHandler
 
         $blood_request_id = (int) $this->data->get('blood_request_id');
         $this->chat
-            ->photo(Storage::path('bot_files/contras.jpg'))
+            //->photo(Storage::path('bot_files/contras.jpg'))
             ->markdown(__('messages.response.thank_you'))
             ->keyboard(Keyboard::make()->buttons([
-                Button::make(__('messages.button.yes_i_will_do_it'))->action('recordDonorResponse')->param('blood_request_id', $blood_request_id)->param('no_response_contras', 1),
-                Button::make(__('messages.button.no_i_can_not'))->action('recordDonorResponse')->param('blood_request_id', $blood_request_id)->param('no_response_contras', 0),
+                Button::make(__('messages.button.yes_i_will_do_it'))->action('recordDonorResponseYes')->param('blood_request_id', (string) $blood_request_id),
+                Button::make(__('messages.button.no_i_can_not'))->action('recordDonorResponseNo')->param('blood_request_id', (string) $blood_request_id),
             ]))
             ->send();
     }
@@ -392,11 +421,22 @@ class DonorWebhookHandler extends WebhookHandler
      *
      * @return void
      */
-    public function recordDonorResponse()
+
+     public function recordDonorResponseYes()
+     {
+         $no_response_contras = 1;
+         $this->recordDonorResponse($no_response_contras);
+     }
+
+    public function recordDonorResponseNo()
+    {
+        $no_response_contras = 0;
+        $this->recordDonorResponse($no_response_contras);
+    }
+    
+    private function recordDonorResponse($data)
     {
         $this->cleanKeyboard();
-
-        $data = $this->data->get('no_response_contras');
 
         if ($data < 1) {
             $this->chat

@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('donor_blood_request_reponses', function (Blueprint $table) {
+        Schema::create('donor_blood_request_responses', function (Blueprint $table) {
             $table->id();
 
             $table->foreignId('donor_id')

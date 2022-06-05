@@ -45,7 +45,7 @@ class SendBloodRequest implements ShouldQueue
      */
     public function handle()
     {
-        $this->chat = $this->donor->telegramChat();
+        $this->chat = $this->donor->telegramChat;
         $this->chat
             ->markdown(__('Потрібна саме ваша кров!'))
             ->keyboard(Keyboard::make()->buttons([

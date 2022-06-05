@@ -21,6 +21,8 @@ class CheckBloodRequestAreClosed extends Command
     protected $description = 'Create jobs for blood requests that are not closed';
 
     protected $currentBloodRequest;
+    protected $minYear;
+    protected $maxYear;
 
     public function __construct()
     {
@@ -32,8 +34,9 @@ class CheckBloodRequestAreClosed extends Command
         //get all blood requests that are not complete yet
         $bloodRequests = BloodRequest::whereNull('closed_on')->get();
         if (!$bloodRequests->isEmpty()) {
-            $requiredYear = Carbon::now()->year - 18;
-            foreach ($bloodRequests as $bloodRequest) {
+            $this->maxYear = Carbon::now()->year - 18;
+            $this->minYear = Carbon::now()->year - 64;
+            foreach ($bloodRequests->all() as $bloodRequest) {
                 //plan sending another batch of messages
                 $this->currentBloodRequest = $bloodRequest;
 
@@ -43,18 +46,19 @@ class CheckBloodRequestAreClosed extends Command
                     function (Builder $query) {
                         $query->where('id', $this->currentBloodRequest->id);
                     })
-                    ->where('blood_type_id', $bloodRequest->blood_type_id)
-                    ->where('birth_year', '<', $requiredYear)
+                    ->where('blood_type_id', $this->currentBloodRequest->blood_type_id)
+                    ->where('birth_year', '<', $this->maxYear)
+                    ->where('birth_year', '>', $this->minYear)
                     ->where('weight_ok', 1)
                     ->where('no_contras', 1)
                     ->where(function ($query) {
                         $query->where('last_donorship_date', '<', Carbon::parse('2 month ago')->format('Y-m-d'))
                             ->orWhereNull('last_donorship_date');
                     })
-                    ->limit($bloodRequest->qty * 3)//we send 3 times more requests than requested
+                    ->limit($this->currentBloodRequest->qty * 3)//we send 3 times more requests than requested
                     ->inRandomOrder()
+                    //->toSql();
                     ->get();
-                
                 
                 if ($donors->isNotEmpty()) {
                     foreach ($donors->all() as $donor) {
