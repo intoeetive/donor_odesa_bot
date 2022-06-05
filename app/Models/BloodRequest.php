@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Blood request sent by hospital
@@ -37,6 +38,17 @@ class BloodRequest extends Model
     {
         /** @phpstan-ignore-next-line */
         return $this->belongsTo(Location::class);
+    }
+
+    /**
+     * User that submitted request
+     *
+     * @return HasMany
+     */
+    public function responses(): HasMany
+    {
+        /** @phpstan-ignore-next-line */
+        return $this->hasMany(DonorBloodRequestResponse::class);
     }
 
     /**

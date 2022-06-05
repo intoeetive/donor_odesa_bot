@@ -32,11 +32,18 @@ class CheckBloodRequestAreClosed extends Command
     public function handle()
     {
         //get all blood requests that are not complete yet
-        $bloodRequests = BloodRequest::whereNull('closed_on')->get();
+        $bloodRequests = BloodRequest::whereNull('closed_on')->withCount('responses')->get();
         if (!$bloodRequests->isEmpty()) {
             $this->maxYear = Carbon::now()->year - 18;
             $this->minYear = Carbon::now()->year - 64;
             foreach ($bloodRequests->all() as $bloodRequest) {
+                //do we already have sufficient number of responses for this request?
+                if ($bloodRequest->responses >= $bloodRequest->qty) {
+                    $bloodRequest->closed_on = Carbon::now()->toDateTimeString();
+                    $bloodRequest->save();
+                    continue;
+                }
+                
                 //plan sending another batch of messages
                 $this->currentBloodRequest = $bloodRequest;
 
