@@ -26,7 +26,7 @@ return new class extends Migration
 
             $table->unsignedInteger('qty');
 
-            $table->date('closed_on')->nullable();
+            $table->dateTime('closed_on')->nullable();
 
             $table->timestamps();
 

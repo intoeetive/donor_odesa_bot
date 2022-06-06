@@ -50,8 +50,12 @@ class SendBloodRequest implements ShouldQueue
             ->markdown(__('Потрібна саме ваша кров!'))
             ->keyboard(Keyboard::make()->buttons([
                 Button::make(__('Хочу і можу!'))->action('respondDonorRequest')->param('blood_request_id', $this->bloodRequest->id)->param('opt_in', 1),
-                Button::make(__('На жаль, не цього разу'))->action('respondDonorRequest')->param('blood_request_id', $this->bloodRequest->id)->param('opt_in', 0),
+                Button::make(__('Не зможу :('))->action('respondDonorRequest')->param('blood_request_id', $this->bloodRequest->id)->param('opt_in', 0),
             ]))
             ->send();
+        
+        //@todo record what has been sent
+        $this->donor->bloodRequests()-attach($this->bloodRequest->id);
+        $this->donor->bloodRequests()->save();
     }
 }

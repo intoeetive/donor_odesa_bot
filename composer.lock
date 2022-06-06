@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1d141181be14964ca3c88d2294e75e89",
+    "content-hash": "9f425f4a0c71973863d6be46f2f8f31b",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -169,16 +169,16 @@
         },
         {
             "name": "defstudio/telegraph",
-            "version": "v1.13.1",
+            "version": "dev-reply-keyboards",
             "source": {
                 "type": "git",
                 "url": "https://github.com/def-studio/telegraph.git",
-                "reference": "cfcc83fa4838f2baa2a633cbb7dbeb6fdd86f866"
+                "reference": "7c6ddde278c2c0d03940c49908216e2b1f5ebb87"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/def-studio/telegraph/zipball/cfcc83fa4838f2baa2a633cbb7dbeb6fdd86f866",
-                "reference": "cfcc83fa4838f2baa2a633cbb7dbeb6fdd86f866",
+                "url": "https://api.github.com/repos/def-studio/telegraph/zipball/7c6ddde278c2c0d03940c49908216e2b1f5ebb87",
+                "reference": "7c6ddde278c2c0d03940c49908216e2b1f5ebb87",
                 "shasum": ""
             },
             "require": {
@@ -243,7 +243,7 @@
             ],
             "support": {
                 "issues": "https://github.com/def-studio/telegraph/issues",
-                "source": "https://github.com/def-studio/telegraph/tree/v1.13.1"
+                "source": "https://github.com/def-studio/telegraph/tree/reply-keyboards"
             },
             "funding": [
                 {
@@ -255,7 +255,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2022-06-01T18:44:19+00:00"
+            "time": "2022-06-05T20:55:35+00:00"
         },
         {
             "name": "dflydev/dot-access-data",
@@ -9162,7 +9162,9 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": [],
+    "stability-flags": {
+        "defstudio/telegraph": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

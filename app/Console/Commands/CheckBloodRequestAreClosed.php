@@ -38,7 +38,7 @@ class CheckBloodRequestAreClosed extends Command
             $this->minYear = Carbon::now()->year - 64;
             foreach ($bloodRequests->all() as $bloodRequest) {
                 //do we already have sufficient number of responses for this request?
-                if ($bloodRequest->responses >= $bloodRequest->qty) {
+                if ($bloodRequest->responses_count >= $bloodRequest->qty) {
                     $bloodRequest->closed_on = Carbon::now()->toDateTimeString();
                     $bloodRequest->save();
                     continue;

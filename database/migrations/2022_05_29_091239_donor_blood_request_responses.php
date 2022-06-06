@@ -34,8 +34,8 @@ return new class extends Migration
 
             $table->unsignedTinyInteger('no_response_contras')->nullable(); // 1 - no contraindications, can be accepted as donor
 
-            $table->date('confirmation_date')->nullable();
-            $table->date('donorship_date')->nullable();
+            $table->dateTime('confirmation_date')->nullable();
+            $table->dateTime('donorship_date')->nullable();
 
             $table->timestamps();
         });

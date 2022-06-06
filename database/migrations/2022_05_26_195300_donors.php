@@ -17,7 +17,7 @@ return new class () extends Migration {
             $table->unsignedTinyInteger('no_contras')->nullable(); // 1 - no contraindications, can be accepted as donor
             $table->unsignedTinyInteger('blood_type_id')->nullable();
 
-            $table->date('last_donorship_date')->nullable();
+            $table->dateTime('last_donorship_date')->nullable();
 
             $table->timestamps();
 

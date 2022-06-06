@@ -2,7 +2,9 @@
 
 namespace App\Http\Livewire;
 
-use App\Models\Location;
+use App\Models\Donor;
+use App\Models\BloodType;
+use App\Models\BloodRequest;
 
 use Illuminate\Database\Eloquent\Builder;
 use Rappasoft\LaravelLivewireTables\DataTableComponent;
@@ -19,17 +21,21 @@ use Rappasoft\LaravelLivewireTables\Views\Filters\TextFilter;
 class RequestsTable extends DataTableComponent
 {
 
-    protected $model = Location::class;
+    protected $model = BloodRequest::class;
 
     public function configure(): void
     {
         $this->setPrimaryKey('id')
-            ->setAdditionalSelects(['locations.id as id'])
-            ->setReorderEnabled()
+            ->setAdditionalSelects(['blood_requests.id as id'])
+            ->setEagerLoadAllRelationsEnabled()
             ->setSingleSortingDisabled()
+            ->setDefaultSort('created_at', 'desc')
+            ->setSortingPillsEnabled()
             ->setHideReorderColumnUnlessReorderingEnabled()
             ->setFilterLayoutSlideDown()
+            ->setFiltersVisibilityEnabled()
             ->setRememberColumnSelectionDisabled()
+            ->setColumnSelectDisabled()
             ->setSecondaryHeaderTrAttributes(function($rows) {
                 return ['class' => 'bg-gray-100'];
             })
@@ -57,34 +63,12 @@ class RequestsTable extends DataTableComponent
     public function filters(): array
     {
         return [
-            TextFilter::make('Name')
-                ->config([
-                    'maxlength' => 5,
-                    'placeholder' => 'Search Name',
-                ])
+            SelectFilter::make('Група крові')
+                ->options(['' => 'Усі групи'] + BloodType::BLOOD_TYPES)
                 ->filter(function(Builder $builder, string $value) {
-                    $builder->where('users.name', 'like', '%'.$value.'%');
+                    $builder->where('blood_type_id', $value);
                 }),
-
-            SelectFilter::make('Active')
-                ->setFilterPillTitle('User Status')
-                ->setFilterPillValues([
-                    '1' => 'Active',
-                    '0' => 'Inactive',
-                ])
-                ->options([
-                    '' => 'All',
-                    '1' => 'Yes',
-                    '0' => 'No',
-                ])
-                ->filter(function(Builder $builder, string $value) {
-                    if ($value === '1') {
-                        $builder->where('active', true);
-                    } elseif ($value === '0') {
-                        $builder->where('active', false);
-                    }
-                }),
-            DateFilter::make('Verified From')
+            /*DateFilter::make('Останнє донорство до')
                 ->config([
                     'min' => '2020-01-01',
                     'max' => '2021-12-31',
@@ -95,35 +79,43 @@ class RequestsTable extends DataTableComponent
             DateFilter::make('Verified To')
                 ->filter(function(Builder $builder, string $value) {
                     $builder->where('email_verified_at', '<=', $value);
-                }),
+                }),*/
         ];
     }
 
     public function columns(): array
     {
         return [
-            Column::make('Name')
+            Column::make('Дата', 'created_at')->sortable(),
+            Column::make('Локація', 'location.name')
+                ->eagerLoadRelations()
                 ->sortable()
                 ->searchable(),
-            Column::make('Address'),
-            Column::make('Координати', 'coords'),
-            Column::make('Інструкції боту', 'bot_instructions')
+            Column::make('Група крові', 'blood_type_id')
+                ->sortable()
+                ->searchable()
+                ->format(
+                    fn($value, $row, Column $column) => BloodType::BLOOD_TYPES[$value]
+                ),
+            Column::make('Потрібна кількть', 'qty'),
+            Column::make('Дата закриття', 'closed_on')->sortable(),
+            Column::make('Донори', 'id')
+                ->format(
+                    fn($value, $row, Column $column) => var_dump($row)
+                    //fn($value, $row, Column $column) => $row->id
+                ),
+            /*LinkColumn::make('Донори')
+                ->title(fn($row) => 'Донори')
+                ->location(fn($row) => route('donors.index', $row)),*/
         ];
     }
 
     public function builder(): Builder
     {
-        return Location::query()
+        return BloodRequest::query()
+            ->withCount('donors')
             ->when($this->columnSearch['name'] ?? null, fn ($query, $name) => $query->where('users.name', 'like', '%' . $name . '%'))
             ->when($this->columnSearch['email'] ?? null, fn ($query, $email) => $query->where('users.email', 'like', '%' . $email . '%'));
     }
 
-    public function bulkActions(): array
-    {
-        return [
-            'activate' => 'Activate',
-            'deactivate' => 'Deactivate',
-            'export' => 'Export',
-        ];
-    }
 }

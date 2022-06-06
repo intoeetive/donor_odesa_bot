@@ -406,6 +406,15 @@ class DonorWebhookHandler extends WebhookHandler
         }
 
         $blood_request_id = (int) $this->data->get('blood_request_id');
+
+        $bloodRequest = BloodRequest::where('id', $blood_request_id)->withCount('responses')->first();
+        if ($bloodRequest->responses_count >= $bloodRequest->qty) {
+            $this->chat
+                ->markdown(__('messages.response.blood_request_already_closed'))
+                ->send();
+            return;
+        }
+
         $this->chat
             ->photo(Storage::path('bot_files/contras.jpg'))
             ->markdown(__('messages.response.thank_you'))
@@ -445,15 +454,22 @@ class DonorWebhookHandler extends WebhookHandler
             return;
         }
 
-        $bloodRequest = BloodRequest::find($this->data->get('blood_request_id'));
+        $bloodRequest = BloodRequest::where('id', $this->data->get('blood_request_id'))->withCount('responses')->first();
+
+        if ($bloodRequest->responses_count >= $bloodRequest->qty) {
+            $this->chat
+                ->markdown(__('messages.response.blood_request_already_closed'))
+                ->send();
+            return;
+        }
 
         $response = DonorBloodRequestResponse::create([
-            'blood_request_id' => $bloodRequest->id,
-            'location_id' => $bloodRequest->location_id,
-            'donor_id' => $this->chat->donor->id,
             'no_response_contras' => $data,
             'confirmation_date' => Carbon::now()->toDateTimeString()
         ]);
+        $response->blood_request_id = $bloodRequest->id;
+        $response->location_id = $bloodRequest->location_id;
+        $response->donor_id = $this->chat->donor->id;
         $response->save();
 
         $this->chat
