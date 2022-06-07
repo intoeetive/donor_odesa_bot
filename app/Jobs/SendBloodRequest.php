@@ -53,9 +53,9 @@ class SendBloodRequest implements ShouldQueue
                 Button::make(__('Не зможу :('))->action('respondDonorRequest')->param('blood_request_id', $this->bloodRequest->id)->param('opt_in', 0),
             ]))
             ->send();
-        
+
         //@todo record what has been sent
-        $this->donor->bloodRequests()-attach($this->bloodRequest->id);
-        $this->donor->bloodRequests()->save();
+        $this->donor->bloodRequests()->attach($this->bloodRequest->id);
+        $this->donor->bloodRequests()->save($this->bloodRequest);
     }
 }
