@@ -2,7 +2,8 @@
 
 namespace App\Http\Livewire;
 
-use App\Models\Location;
+use App\Models\BloodType;
+use App\Models\DonorBloodRequestResponse;
 
 use Illuminate\Database\Eloquent\Builder;
 use Rappasoft\LaravelLivewireTables\DataTableComponent;
@@ -19,12 +20,11 @@ use Rappasoft\LaravelLivewireTables\Views\Filters\TextFilter;
 class ResponsesTable extends DataTableComponent
 {
 
-    protected $model = Location::class;
+    protected $model = DonorBloodRequestResponse::class;
 
     public function configure(): void
     {
         $this->setPrimaryKey('id')
-            ->setAdditionalSelects(['locations.id as id'])
             ->setReorderEnabled()
             ->setSingleSortingDisabled()
             ->setHideReorderColumnUnlessReorderingEnabled()
@@ -57,7 +57,7 @@ class ResponsesTable extends DataTableComponent
     public function filters(): array
     {
         return [
-            TextFilter::make('Name')
+            /*TextFilter::make('Name')
                 ->config([
                     'maxlength' => 5,
                     'placeholder' => 'Search Name',
@@ -95,25 +95,33 @@ class ResponsesTable extends DataTableComponent
             DateFilter::make('Verified To')
                 ->filter(function(Builder $builder, string $value) {
                     $builder->where('email_verified_at', '<=', $value);
-                }),
+                }),*/
         ];
     }
 
     public function columns(): array
     {
         return [
-            Column::make('Name')
+            Column::make('Донор', 'donor.name')
+                ->collapseOnTablet()
+                ->eagerLoadRelations()
                 ->sortable()
                 ->searchable(),
-            Column::make('Address'),
-            Column::make('Координати', 'coords'),
-            Column::make('Інструкції боту', 'bot_instructions')
+            Column::make('Група крові', 'bloodRequest.blood_type_id')
+                ->eagerLoadRelations()
+                ->sortable()
+                ->searchable()
+                ->format(
+                    fn($value, $row, Column $column) => BloodType::BLOOD_TYPES[$value]
+                ),
+            BooleanColumn::make('Відповідь', 'no_response_contras')->sortable()->searchable(),
+            Column::make('Дата конфірмації', 'confirmation_date')
         ];
     }
 
     public function builder(): Builder
     {
-        return Location::query()
+        return DonorBloodRequestResponse::query()
             ->when($this->columnSearch['name'] ?? null, fn ($query, $name) => $query->where('users.name', 'like', '%' . $name . '%'))
             ->when($this->columnSearch['email'] ?? null, fn ($query, $email) => $query->where('users.email', 'like', '%' . $email . '%'));
     }
