@@ -5,11 +5,15 @@ namespace App\Handlers;
 use DefStudio\Telegraph\Handlers\WebhookHandler;
 use DefStudio\Telegraph\Keyboard\Button;
 use DefStudio\Telegraph\Keyboard\Keyboard;
+use DefStudio\Telegraph\Keyboard\ReplyKeyboard;
+use DefStudio\Telegraph\Models\TelegraphBot;
 use DefStudio\Telegraph\Enums\ChatActions;
 use DefStudio\Telegraph\Telegraph;
 use Revolution\Google\Sheets\Facades\Sheets;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Stringable;
+use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Exception;
 
@@ -43,11 +47,13 @@ class DonorWebhookHandler extends WebhookHandler
                     Log::debug('Donor has phone number');
                 }
                 $this->welcomeBack($this->chat->donor);
+                return;
             } else {
                 $this->chat
                     ->markdown(__('messages.message.welcome'))
                     ->send();
                 $this->requestMissingDonorData('phone');
+                return;
             }
         } else {
             if (config('telegraph.debug_mode')) {
@@ -57,7 +63,50 @@ class DonorWebhookHandler extends WebhookHandler
                 ->markdown(__('messages.message.welcome'))
                 ->send();
             $this->requestMissingDonorData('phone');
+            return;
         }
+    }
+
+    protected function handleChatMessage(Stringable $text): void
+    {
+        //is this contact?
+        if (! empty($this->message->contact())) {
+            $this->share_phone($this->message->contact()->phone_number());
+            return;
+        }
+
+        if(! empty($this->chat->donor) && ! $text->isEmpty()) {
+
+            if (config('telegraph.debug_mode')) {
+                Log::debug('What are they sending?', [$this->chat->donor->name, $this->chat->donor->birth_year, $text, is_numeric($text)]);
+            }
+
+            //are they sharing name?
+            if (empty($this->chat->donor->name) && !is_numeric($text->value())) {
+                $this->share_name($text->title());
+                return;
+            }
+            //are they sharing birth year?
+
+            if (empty($this->chat->donor->birth_year) && is_numeric($text->value())) {
+                $this->share_birth_year($text->value());
+                return;
+            }
+        }
+
+    }
+
+    public function handle(Request $request, TelegraphBot $bot): void
+    {
+        $this->bot = $bot;
+
+        $this->request = $request;
+
+        if (config('telegraph.debug_mode')) {
+            Log::debug('INPUT', $this->request->toArray());
+        }
+
+        parent::handle($request, $bot);
     }
 
     /**
@@ -82,6 +131,7 @@ class DonorWebhookHandler extends WebhookHandler
                 ->markdown(__('messages.message.welcome_back_data_missing'))
                 ->send();
             $this->requestMissingDonorData($missingData);
+            return;
         } else {
             //show 'welcome back' message
             $this->chat
@@ -142,12 +192,17 @@ class DonorWebhookHandler extends WebhookHandler
         } else {
             $message = $this->chat->markdown(__('messages.request.' . $property));
         }
+        //$message->reply($this->messageId);
         $keyboard = $this->buildMessageKeyboard($property);
         if (!empty($keyboard)) {
             if (config('telegraph.debug_mode')) {
                 Log::debug('Keyboard: ', $keyboard->toArray());
             }
-            $message->keyboard($keyboard)->send();
+            if ($keyboard instanceof ReplyKeyboard) {
+                $message->replyKeyboard($keyboard)->send();
+            } else {
+                $message->keyboard($keyboard)->send();
+            }
         } else {
             $message->send();
         }
@@ -174,20 +229,7 @@ class DonorWebhookHandler extends WebhookHandler
                 $keyboard = Keyboard::make()->buttons($buttons)->chunk(2);
                 break;
             case 'phone':
-                $keyboard = Keyboard::make()->buttons([
-                    Button::make(__('messages.button.share_' . $property))->action('share_' . $property),
-                ]);
-                break;
-            case 'name':
-                $keyboard = Keyboard::make()->buttons([
-                    Button::make(__('messages.button.share_' . $property))->action('share_' . $property),
-                ]);
-                break;
-            case 'birth_year':
-                $keyboard = Keyboard::make()->buttons([
-                    Button::make('1990')->action('share_' . $property)->param('birth_year', '1990'),
-                    Button::make('2008')->action('share_' . $property)->param('birth_year', '2008'),
-                ]);
+                $keyboard = ReplyKeyboard::make()->button(__('messages.button.share_' . $property))->requestContact()->oneTime();
                 break;
             case 'weight_ok':
                 $keyboard = Keyboard::make()->buttons([
@@ -227,16 +269,15 @@ class DonorWebhookHandler extends WebhookHandler
         }
     }
 
-    public function share_phone(): void
+    public function share_phone($phone): void
     {
         $this->cleanKeyboard();
-
-        $phone = '+380123456578';
-        $this->chat->markdown('*' . $phone .'*')->send();
 
         //take the phone number and look up in the database
         if(! empty($this->chat->donor)) {
             $donor = $this->chat->donor;
+            $donor->phone = $phone;
+            $donor->save();
         } else {
             $donor = Donor::where('phone', $phone)->first();
         }
@@ -249,6 +290,7 @@ class DonorWebhookHandler extends WebhookHandler
             //    $this->reply("Помилка збереження.");
             //}
             $this->welcomeBack($donor);
+            return;
         } else {
             $donor = $this->chat->donor()->create([
                 'phone' => $phone
@@ -264,16 +306,11 @@ class DonorWebhookHandler extends WebhookHandler
         $this->requestMissingDonorData($missingData);
     }
 
-    public function share_name(): void
+    public function share_name($data): void
     {
         $this->cleanKeyboard();
 
-        if (config('telegraph.debug_mode')) {
-            Log::debug('Message: ', $this->callbackQuery->message()->toArray());
-        }
-        $data = $this->callbackQuery->message()->from()->firstName() . ' ' . $this->callbackQuery->message()->from()->lastName();
         $this->chat->markdown('*' . $data . '*')->send();
-
 
         //try {
             $this->chat->donor->name = $data;
@@ -304,11 +341,30 @@ class DonorWebhookHandler extends WebhookHandler
         $this->requestMissingDonorData($missingData);
     }
 
-    public function share_birth_year(): void
+    public function share_birth_year($data): void
     {
         $this->cleanKeyboard();
 
-        $data = $this->data->get('birth_year');
+        if (config('telegraph.debug_mode')) {
+            Log::debug('birth year', [$data, ! is_numeric($data), $data != (int) $data, strlen($data) != 2, strlen($data) != 4]);
+        }
+
+        if (! is_numeric($data) || $data != (int) $data || (strlen($data) != 2 && strlen($data) != 4)) {
+            $this->chat
+                ->markdown(__('messages.request.need_only_birth_year'))
+                ->send();
+            return;
+        }
+
+        //if just to digits provided, guess century
+        if (strlen($data) == 2) {
+            if ($data > Carbon::now()->format('y')) {
+                $data = '19' . $data;
+            } else {
+                $data = '20' . $data;
+            }
+        }
+
         $this->chat->markdown('*' . $data . '*')->send();
 
         $maxYear = Carbon::now()->year - 18;
