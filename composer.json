@@ -6,7 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.0.2",
-        "defstudio/telegraph": "dev-reply-keyboards",
+        "defstudio/telegraph": "@dev",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^9.11",
         "laravel/jetstream": "^2.8",
@@ -24,6 +24,12 @@
         "phpunit/phpunit": "^9.5.10",
         "spatie/laravel-ignition": "^1.0"
     },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../telegraph"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "App\\": "app/",
