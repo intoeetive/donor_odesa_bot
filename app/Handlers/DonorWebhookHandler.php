@@ -229,7 +229,7 @@ class DonorWebhookHandler extends WebhookHandler
                 $keyboard = Keyboard::make()->buttons($buttons)->chunk(2);
                 break;
             case 'phone':
-                $keyboard = ReplyKeyboard::make()->button(__('messages.button.share_' . $property))->requestContact()->oneTime();
+                $keyboard = ReplyKeyboard::make()->button(__('messages.button.share_' . $property))->requestContact();//->oneTime();
                 break;
             case 'weight_ok':
                 $keyboard = Keyboard::make()->buttons([
@@ -272,6 +272,12 @@ class DonorWebhookHandler extends WebhookHandler
     public function share_phone($phone): void
     {
         $this->cleanKeyboard();
+
+        if (strpos($phone, '+') !== 0) {
+            $phone = '+' . $phone;
+        }
+
+        $this->chat->markdown('*' . $phone . '*')->removeReplyKeyboard()->send();
 
         //take the phone number and look up in the database
         if(! empty($this->chat->donor)) {
