@@ -45,6 +45,9 @@ class CheckBloodRequestAreClosed extends Command
                     continue;
                 }
 
+                //plan sending another batch of messages
+                $this->currentBloodRequest = $bloodRequest;
+
                 if (config('telegraph.debug_mode')) {
                     Log::debug('Sending blood requests for', [
                         'blood_type_id' => $this->currentBloodRequest->blood_type_id,
@@ -52,9 +55,6 @@ class CheckBloodRequestAreClosed extends Command
                         'birth_year_gt' => $this->minYear,
                     ]);
                 }
-                
-                //plan sending another batch of messages
-                $this->currentBloodRequest = $bloodRequest;
 
                 //get the donors that fit, and we did not request them yet
                 $donors = Donor::whereDoesntHave(

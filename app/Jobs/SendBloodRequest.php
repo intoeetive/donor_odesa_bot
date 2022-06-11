@@ -56,8 +56,7 @@ class SendBloodRequest implements ShouldQueue
             ->send();
         
         //@todo record what has been sent
-        $this->chat->donor->bloodRequests()-attach($this->bloodRequest->id);
-        $this->chat->donor->bloodRequests()->save();
+        $this->donor->bloodRequests()->attach($this->bloodRequest->id);
 
         if (config('telegraph.debug_mode')) {
             Log::debug('Sent blood request', [
