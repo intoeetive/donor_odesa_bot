@@ -86,10 +86,17 @@ class DonorWebhookHandler extends WebhookHandler
                 $this->share_name($text->title());
                 return;
             }
-            //are they sharing birth year?
 
+            //are they sharing birth year?
             if (empty($this->chat->donor->birth_year) && is_numeric($text->value())) {
                 $this->share_birth_year($text->value());
+                return;
+            }
+
+            //are they sharing last donorship date?
+            if (empty($this->chat->donor->last_donorship_date)) {
+                $last_donorship_date = Carbon::parse($text->value())->locale('uk')->toDateTimeString();
+                $this->share_last_donorship_date($last_donorship_date);
                 return;
             }
         }
@@ -167,6 +174,9 @@ class DonorWebhookHandler extends WebhookHandler
         if ($donor->no_contras === null) {
             return 'no_contras';
         }
+        if ($donor->last_donorship_date === null) {
+            return 'last_donorship_date_yes_no';
+        }
         return false;
     }
 
@@ -243,6 +253,12 @@ class DonorWebhookHandler extends WebhookHandler
                     Button::make(__('messages.button.have_contraindications'))->action('share_' . $property)->param('no_contras', '0'),
                 ]);
                 break;
+            case 'last_donorship_date_yes_no':
+                $keyboard = Keyboard::make()->buttons([
+                    Button::make(__('messages.button.last_donorship_yes'))->action('share_' . $property)->param('last_donorship', '1'),
+                    Button::make(__('messages.button.last_donorship_no'))->action('share_' . $property)->param('last_donorship', '0'),
+                ]);
+                break;
             default:
                 $keyboard = null;
                 break;
@@ -271,12 +287,9 @@ class DonorWebhookHandler extends WebhookHandler
 
     public function share_phone($phone): void
     {
-        $this->cleanKeyboard();
-
         if (strpos($phone, '+') !== 0) {
             $phone = '+' . $phone;
         }
-
         $this->chat->markdown('*' . $phone . '*')->removeReplyKeyboard()->send();
 
         //take the phone number and look up in the database
@@ -289,68 +302,70 @@ class DonorWebhookHandler extends WebhookHandler
         }
         if(! empty($donor)) {
             //associate donor with this chat
-            //try {
+            try {
+                $this->cleanKeyboard();
                 $this->chat->donor()->associate($donor);
                 $this->chat->save();
-            //} catch (Exception $e) {
-            //    $this->reply("Помилка збереження.");
-            //}
-            $this->welcomeBack($donor);
+                $this->welcomeBack($donor);
+            } catch (Exception $e) {
+                $this->reply("Помилка збереження.");
+            }
             return;
         } else {
-            $donor = $this->chat->donor()->create([
-                'phone' => $phone
-            ]);
-            if (config('telegraph.debug_mode')) {
-                Log::debug('Donor created: ', $donor->toArray());
-            }
-            $this->chat->donor()->associate($donor);
-            $this->chat->save();
-        }
+            try {
+                $this->cleanKeyboard();
+                $donor = $this->chat->donor()->create([
+                    'phone' => $phone
+                ]);
+                if (config('telegraph.debug_mode')) {
+                    Log::debug('Donor created: ', $donor->toArray());
+                }
+                $this->chat->donor()->associate($donor);
+                $this->chat->save();
 
-        $missingData = $this->checkMissingDonorData($donor);
-        $this->requestMissingDonorData($missingData);
+                $missingData = $this->checkMissingDonorData($donor);
+                $this->requestMissingDonorData($missingData);
+            } catch (Exception $e) {
+                $this->reply("Помилка збереження.");
+            }
+        }
     }
 
     public function share_name($data): void
     {
-        $this->cleanKeyboard();
-
         $this->chat->markdown('*' . $data . '*')->send();
 
-        //try {
+        try {
+            $this->cleanKeyboard();
             $this->chat->donor->name = $data;
             $this->chat->donor->save();
-        //} catch (Exception $e) {
-        //    $this->reply("Помилка збереження.");
-        //}
 
-        $missingData = $this->checkMissingDonorData($this->chat->donor);
-        $this->requestMissingDonorData($missingData);
+            $missingData = $this->checkMissingDonorData($this->chat->donor);
+            $this->requestMissingDonorData($missingData);
+        } catch (Exception $e) {
+            $this->reply("Помилка збереження.");
+        }
     }
 
     public function share_blood_type_id(): void
     {
-        $this->cleanKeyboard();
-
         $data = $this->data->get('blood_type_id');
         $this->chat->markdown('*' . BloodType::BLOOD_TYPES[$data] . '*')->send();
 
-        //try {
+        try {
+            $this->cleanKeyboard();
             $this->chat->donor->blood_type_id = $data;
             $this->chat->donor->save();
-        //} catch (Exception $e) {
-        //    $this->reply("Помилка збереження.");
-        //}
 
-        $missingData = $this->checkMissingDonorData($this->chat->donor);
-        $this->requestMissingDonorData($missingData);
+            $missingData = $this->checkMissingDonorData($this->chat->donor);
+            $this->requestMissingDonorData($missingData);
+        } catch (Exception $e) {
+            $this->reply("Помилка збереження.");
+        }
     }
 
     public function share_birth_year($data): void
     {
-        $this->cleanKeyboard();
-
         if (config('telegraph.debug_mode')) {
             Log::debug('birth year', [$data, ! is_numeric($data), $data != (int) $data, strlen($data) != 2, strlen($data) != 4]);
         }
@@ -380,27 +395,22 @@ class DonorWebhookHandler extends WebhookHandler
             return;
         }
 
-        //try {
+        try {
             $this->chat->donor->birth_year = $data;
             $this->chat->donor->save();
-        //} catch (Exception $e) {
-        //    $this->reply("Помилка збереження.");
-        //}
-        if (config('telegraph.debug_mode')) {
-            Log::debug('birth_year:', [ $this->chat->donor->birth_year]);
+            if (config('telegraph.debug_mode')) {
+                Log::debug('birth_year:', [ $this->chat->donor->birth_year]);
+            }
+    
+            $missingData = $this->checkMissingDonorData($this->chat->donor);
+            $this->requestMissingDonorData($missingData);
+        } catch (Exception $e) {
+            $this->reply("Помилка збереження.");
         }
-
-        $missingData = $this->checkMissingDonorData($this->chat->donor);
-        if (config('telegraph.debug_mode')) {
-            Log::debug('Missing data:', [$missingData]);
-        }
-        $this->requestMissingDonorData($missingData);
     }
 
     public function share_weight_ok(): void
     {
-        $this->cleanKeyboard();
-
         $data = $this->data->get('weight_ok');
         $options = [
             '0' => __('messages.button.less_55_kg'),
@@ -409,25 +419,24 @@ class DonorWebhookHandler extends WebhookHandler
         $this->chat->markdown('*' . $options[$data] . '*')->send();
 
         if ($data < 1) {
+            $this->cleanKeyboard();
             $this->denyDonor('weight_ok');
             return;
         }
 
-        //try {
+        try {
+            $this->cleanKeyboard();
             $this->chat->donor->weight_ok = 1;
             $this->chat->donor->save();
-        //} catch (Exception $e) {
-        //    $this->reply("Помилка збереження.");
-        //}
-
-        $missingData = $this->checkMissingDonorData($this->chat->donor);
-        $this->requestMissingDonorData($missingData);
+            $missingData = $this->checkMissingDonorData($this->chat->donor);
+            $this->requestMissingDonorData($missingData);
+        } catch (Exception $e) {
+            $this->reply("Помилка збереження.");
+        }
     }
 
     public function share_no_contras(): void
     {
-        $this->cleanKeyboard();
-
         $data = $this->data->get('no_contras');
         $options = [
             '0' => __('messages.button.have_contraindications'),
@@ -436,21 +445,57 @@ class DonorWebhookHandler extends WebhookHandler
         $this->chat->markdown('*' . $options[$data] . '*')->send();
 
         if ($data < 1) {
+            $this->cleanKeyboard();
             $this->denyDonor('no_contras');
             return;
         }
 
-        //try {
+        try {
+            $this->cleanKeyboard();
             $this->chat->donor->no_contras = $data;
             $this->chat->donor->save();
-        //} catch (Exception $e) {
-        //    $this->reply("Помилка збереження.");
-        //}
+            $missingData = $this->checkMissingDonorData($this->chat->donor);
+            $this->requestMissingDonorData($missingData);
+        } catch (Exception $e) {
+            $this->reply("Помилка збереження.");
+        }
+    }
 
-        //last step, show them success message
-        $this->chat
-            ->markdown(__('messages.request.thank_you'))
-            ->send();
+    public function share_last_donorship_date_yes_no(): void
+    {
+        $data = $this->data->get('last_donorship');
+        $options = [
+            '0' => __('messages.button.last_donorship_no'),
+            '1' => __('messages.button.last_donorship_yes'),
+        ];
+        $this->chat->markdown('*' . $options[$data] . '*')->send();
+
+        $this->cleanKeyboard();
+
+        if ($data < 1) {
+            $this->chat
+                ->markdown(__('messages.request.thank_you'))
+                ->send();
+        } else {
+            $this->chat
+                ->markdown(__('messages.request.last_donorship_date'))
+                ->send();
+        }
+    }
+
+    public function share_last_donorship_date($data): void
+    {
+        try {
+            $this->cleanKeyboard();
+            $this->chat->donor->last_donorship_date = $data;
+            $this->chat->donor->save();
+
+            $this->chat
+                ->markdown(__('messages.request.thank_you'))
+                ->send();
+        } catch (Exception $e) {
+            $this->reply("Помилка збереження.");
+        }
     }
 
     /**

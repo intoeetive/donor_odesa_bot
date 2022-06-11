@@ -41,7 +41,12 @@ return [
     'button.more_55_kg' => 'Більше 55 кг',
     'button.less_55_kg' => 'Менше 55 кг',
     'request.not_acceptable.weight_ok' => 'Ви не можете стати донором через вашу вагу',
-    
+
+    'request.last_donorship_date_yes_no' => 'Чи ставали ви вже донором крові протягом останніх 2 місяців?',
+    'button.last_donorship_yes' => 'Так',
+    'button.last_donorship_no' => 'Ні',
+    'request.last_donorship_date' => 'Будь ласка введіть дату вашого останнього донорства в форматі 12.06.2022',
+
     'request.no_contras' => 'Будь ласка перегляньте перелік і підтвердіть що у вас немає нічого зі списку',
     
     'button.have_no_contraindications' => 'Ні, в мене нема протипоказань',
