@@ -22,34 +22,49 @@ class SyncFromGoogleSheet extends Command
         $data = Sheets::spreadsheet(config('google.spreadsheet_id'))
               ->sheetById(config('google.sheet_id'))
               ->get();
-        var_dump($data);
+
         $header = $data->pull(0);
         $values = Sheets::collection($header, $data)->toArray();
 
-        return;
-
         foreach ($values as $i => $row) {
-            //skip all records that have Telegram ID set
-            if ($row['Telegram ID'] != '') {
-                continue;
-            }
 
             $donor = new Donor();
             $insert = [
-                'name' => $row["Прізвище, Ім'я"],
-                'phone' => $row["Ваш мобільный телефон"],
-                'blood_type' => $row["Група крові"],
-                'blood_rh' => $row["Резус-фактор"],
-                'sheet_row' => $i+1
+                'name' => trim($row["Прізвище, Ім'я"], "'"),
+                'phone' => trim($row["Ваш мобільный телефон"], "'"),
             ];
-            if (!empty($donor['phone'])) {
-                $donor['phone'] = preg_replace("/[^0-9]/", "", $donor['phone']);
-                if (substr($donor['phone'], 0, 2) == '38') {
-                    $donor['phone'] = '+' . $donor['phone'];
-                } elseif (substr($donor['phone'], 0, 2) == '80') {
-                    $donor['phone'] = '+3' . $donor['phone'];
-                }if (substr($donor['phone'], 0, 1) == '0') {
-                    $donor['phone'] = '+38' . $donor['phone'];
+            if (!empty($insert['phone'])) {
+                $insert['phone'] = preg_replace("/[^0-9]/", "", $insert['phone']);
+                if (substr($insert['phone'], 0, 2) == '38') {
+                    $insert['phone'] = '+' . $insert['phone'];
+                } elseif (substr($insert['phone'], 0, 2) == '80') {
+                    $insert['phone'] = '+3' . $insert['phone'];
+                } elseif (substr($insert['phone'], 0, 1) == '0') {
+                    $insert['phone'] = '+38' . $insert['phone'];
+                } elseif (strlen($insert['phone']) == 9) {
+                    $insert['phone'] = '+380' . $insert['phone'];
+                }
+                $blood_type = trim($row["Група крові"], "'");
+                $blood_rh = trim($row["Резус-фактор"], "'");
+                switch ($blood_type) {
+                    case 'I (1)':
+                        $insert['blood_type_id'] = '10';
+                        break;
+                    case 'II (2)':
+                        $insert['blood_type_id'] = '20';
+                        break;
+                    case 'III (3)':
+                        $insert['blood_type_id'] = '30';
+                        break;
+                    case 'IV (4)':
+                        $insert['blood_type_id'] = '40';
+                        break;
+                    default:
+                        $insert['blood_type_id'] = null;
+                        break;
+                }
+                if (!empty($insert['blood_type_id']) && $blood_rh == '-') {
+                    $insert['blood_type_id'] += 1;
                 }
                 $donor->fill($insert);
                 $donor->save();

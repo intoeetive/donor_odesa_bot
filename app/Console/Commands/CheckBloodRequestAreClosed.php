@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Log;
 
 use App\Jobs\SendBloodRequest;
 use App\Models\BloodRequest;
@@ -42,6 +43,14 @@ class CheckBloodRequestAreClosed extends Command
                     $bloodRequest->closed_on = Carbon::now()->toDateTimeString();
                     $bloodRequest->save();
                     continue;
+                }
+
+                if (config('telegraph.debug_mode')) {
+                    Log::debug('Sending blood requests for', [
+                        'blood_type_id' => $this->currentBloodRequest->blood_type_id,
+                        'birth_year_less' => $this->maxYear,
+                        'birth_year_gt' => $this->minYear,
+                    ]);
                 }
                 
                 //plan sending another batch of messages

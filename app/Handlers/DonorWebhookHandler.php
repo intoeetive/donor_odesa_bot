@@ -531,7 +531,7 @@ class DonorWebhookHandler extends WebhookHandler
         ]);
         $response->blood_request_id = $bloodRequest->id;
         $response->location_id = $bloodRequest->location_id;
-        $response->donor_id = $this->chat->donor->id;
+        $response->donor()->associate($this->chat->donor);
         $response->save();
 
         $this->chat
