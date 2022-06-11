@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BloodType;
 use App\Models\DonorBloodRequestResponse;
+use App\Models\Location;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -26,6 +28,13 @@ class RequestsResponsesController extends Controller
     public function create()
     {
         //
+        $locations = Location::query()->get();
+        $bloodTypes = BloodType::BLOOD_TYPES;
+
+        return view('requests.create', [
+            'locations' => $locations,
+            'bloodTypes' => $bloodTypes
+        ]);
     }
 
     /**

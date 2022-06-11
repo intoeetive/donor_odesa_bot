@@ -2,31 +2,28 @@
 
 namespace App\Http\Livewire;
 
-use App\Models\Location;
+use App\Models\BloodType;
+use App\Models\DonorBloodRequestResponse;
 
 use Illuminate\Database\Eloquent\Builder;
 use Rappasoft\LaravelLivewireTables\DataTableComponent;
 use Rappasoft\LaravelLivewireTables\Views\Columns\BooleanColumn;
 use Rappasoft\LaravelLivewireTables\Views\Column;
-use Rappasoft\LaravelLivewireTables\Views\Columns\ImageColumn;
-use Rappasoft\LaravelLivewireTables\Views\Columns\LinkColumn;
-use Rappasoft\LaravelLivewireTables\Views\Columns\ButtonGroupColumn;
 use Rappasoft\LaravelLivewireTables\Views\Filters\SelectFilter;
-use Rappasoft\LaravelLivewireTables\Views\Filters\MultiSelectFilter;
-use Rappasoft\LaravelLivewireTables\Views\Filters\DateFilter;
 use Rappasoft\LaravelLivewireTables\Views\Filters\TextFilter;
 
 class ResponsesTable extends DataTableComponent
 {
 
-    protected $model = Location::class;
+    protected $model = DonorBloodRequestResponse::class;
 
     public function configure(): void
     {
         $this->setPrimaryKey('id')
-            ->setAdditionalSelects(['locations.id as id'])
-            ->setReorderEnabled()
+            //->setReorderEnabled()
             ->setSingleSortingDisabled()
+            ->setDefaultSort('confirmation_date', 'desc')
+            ->setSortingPillsEnabled()
             ->setHideReorderColumnUnlessReorderingEnabled()
             ->setFilterLayoutSlideDown()
             ->setRememberColumnSelectionDisabled()
@@ -63,38 +60,12 @@ class ResponsesTable extends DataTableComponent
                     'placeholder' => 'Search Name',
                 ])
                 ->filter(function(Builder $builder, string $value) {
-                    $builder->where('users.name', 'like', '%'.$value.'%');
+                    $builder->where('donors.name', 'like', '%'.$value.'%');
                 }),
-
-            SelectFilter::make('Active')
-                ->setFilterPillTitle('User Status')
-                ->setFilterPillValues([
-                    '1' => 'Active',
-                    '0' => 'Inactive',
-                ])
-                ->options([
-                    '' => 'All',
-                    '1' => 'Yes',
-                    '0' => 'No',
-                ])
+            SelectFilter::make('Група крові')
+                ->options(['' => 'Усі групи'] + BloodType::BLOOD_TYPES)
                 ->filter(function(Builder $builder, string $value) {
-                    if ($value === '1') {
-                        $builder->where('active', true);
-                    } elseif ($value === '0') {
-                        $builder->where('active', false);
-                    }
-                }),
-            DateFilter::make('Verified From')
-                ->config([
-                    'min' => '2020-01-01',
-                    'max' => '2021-12-31',
-                ])
-                ->filter(function(Builder $builder, string $value) {
-                    $builder->where('email_verified_at', '>=', $value);
-                }),
-            DateFilter::make('Verified To')
-                ->filter(function(Builder $builder, string $value) {
-                    $builder->where('email_verified_at', '<=', $value);
+                    $builder->where('donors.blood_type_id', $value);
                 }),
         ];
     }
@@ -102,18 +73,34 @@ class ResponsesTable extends DataTableComponent
     public function columns(): array
     {
         return [
-            Column::make('Name')
+            Column::make(__('ui.donor_name'), 'donor.name')
+                ->collapseOnTablet()
                 ->sortable()
                 ->searchable(),
-            Column::make('Address'),
-            Column::make('Координати', 'coords'),
-            Column::make('Інструкції боту', 'bot_instructions')
+            Column::make(__('ui.phone'), 'donor.phone')
+                ->collapseOnTablet()
+                ->searchable(),
+            Column::make(__('ui.blood_type'), 'donor.blood_type_id')
+                ->collapseOnTablet()
+                ->sortable()
+                ->searchable()
+                ->format(fn($value, $row, Column $column) => BloodType::BLOOD_TYPES[$value]),
+            Column::make(__('ui.birthday'), 'donor.birth_year')
+                ->collapseOnTablet()
+                ->sortable()
+                ->searchable(),
+            BooleanColumn::make(__('ui.donor_weight'), 'donor.weight_ok')->collapseOnTablet()->searchable(),
+            BooleanColumn::make(__('ui.donor_no_contras'), 'donor.no_contras')->collapseOnTablet()->searchable(),
+            Column::make(__('ui.donor_last_donorship_date'), 'donor.last_donorship_date')->collapseOnTablet()->sortable(),
+
+            BooleanColumn::make(__('ui.response'), 'no_response_contras')->sortable()->searchable(),
+            Column::make(__('ui.confirmation_date'), 'confirmation_date')
         ];
     }
 
     public function builder(): Builder
     {
-        return Location::query()
+        return DonorBloodRequestResponse::query()
             ->when($this->columnSearch['name'] ?? null, fn ($query, $name) => $query->where('users.name', 'like', '%' . $name . '%'))
             ->when($this->columnSearch['email'] ?? null, fn ($query, $email) => $query->where('users.email', 'like', '%' . $email . '%'));
     }
@@ -121,8 +108,7 @@ class ResponsesTable extends DataTableComponent
     public function bulkActions(): array
     {
         return [
-            'activate' => 'Activate',
-            'deactivate' => 'Deactivate',
+            'confirm' => 'Confirm',
             'export' => 'Export',
         ];
     }
