@@ -28,10 +28,4 @@ class DonorBloodRequestResponse extends Model
         /** @phpstan-ignore-next-line */
         return $this->belongsTo(Donor::class);
     }
-
-    public function location(): BelongsTo
-    {
-        /** @phpstan-ignore-next-line */
-        return $this->belongsTo(Location::class);
-    }
 }

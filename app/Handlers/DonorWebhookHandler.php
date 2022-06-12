@@ -67,6 +67,46 @@ class DonorWebhookHandler extends WebhookHandler
         }
     }
 
+    /**
+     * Show what we have on current donor
+     *
+     * @return void
+     */
+    public function whoami(): void
+    {
+        $data = 'Ім\'я: ' . $this->chat->donor->name . "\n";
+        $data .= 'Телефон: ' . $this->chat->donor->phone . "\n";
+        $data .= 'Група крові: ' . (!empty($this->chat->donor->blood_type_id) ? BloodType::BLOOD_TYPES[$this->chat->donor->blood_type_id] : '') . "\n";
+        $data .= 'Рік народження: ' . $this->chat->donor->birth_year . "\n";
+        $data .= 'Вага: ' . ($this->chat->donor->weight_ok === 1 ? 'Більше 55 кг' : ($this->chat->donor->weight_ok === 0 ? 'Менше 55 кг' : ''))  . "\n";
+        $data .= 'Наявність протипоказань: ' . ($this->chat->donor->no_contras === 1 ? 'Немає' : ($this->chat->donor->no_contras === 0 ? 'Є' : '')) . "\n";
+        $data .= 'Дата останнього донорства: ' . $this->chat->donor->last_donorship_date;
+        $this->chat
+                ->markdown($data)
+                ->send();
+    }
+
+    /**
+     * Let the donor remove themselves from database
+     *
+     * @return void
+     */
+    public function delete(): void
+    {
+        $this->chat->donor->delete();
+        unset($this->chat->donor);
+        $this->chat
+                ->markdown('Данні видалено')
+                ->send();
+        $this->start();
+    }
+
+    /**
+     * Process data sent as messages (not button clicks)
+     *
+     * @param Stringable $text
+     * @return void
+     */
     protected function handleChatMessage(Stringable $text): void
     {
         //is this contact?
@@ -103,14 +143,17 @@ class DonorWebhookHandler extends WebhookHandler
 
     }
 
+    /**
+     * Extra debugging while in development mode
+     *
+     * @param Request $request
+     * @param TelegraphBot $bot
+     * @return void
+     */
     public function handle(Request $request, TelegraphBot $bot): void
     {
-        $this->bot = $bot;
-
-        $this->request = $request;
-
         if (config('telegraph.debug_mode')) {
-            Log::debug('INPUT', $this->request->toArray());
+            Log::debug('INPUT', $$this->chat->donor->toArray());
         }
 
         parent::handle($request, $bot);

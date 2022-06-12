@@ -6,6 +6,7 @@ use App\Models\Donor;
 use App\Models\BloodType;
 use App\Models\BloodRequest;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Rappasoft\LaravelLivewireTables\DataTableComponent;
 use Rappasoft\LaravelLivewireTables\Views\Columns\BooleanColumn;
@@ -57,7 +58,10 @@ class RequestsTable extends DataTableComponent
                 return ['default' => true];
             })
             ->setUseHeaderAsFooterEnabled()
-            ->setHideBulkActionsWhenEmptyEnabled();
+            ->setHideBulkActionsWhenEmptyEnabled()
+            ->setTableRowUrl(function($row) {
+                return '/request-responses?table[filters][blood_request_id]=' . $row->id;
+            });
     }
 
     public function filters(): array
@@ -65,6 +69,11 @@ class RequestsTable extends DataTableComponent
         return [
             SelectFilter::make('Група крові')
                 ->options(['' => 'Усі групи'] + BloodType::BLOOD_TYPES)
+                ->filter(function(Builder $builder, string $value) {
+                    $builder->where('blood_type_id', $value);
+                }),
+            SelectFilter::make('Локація')
+                ->options(['' => 'Усі локації'] + BloodType::BLOOD_TYPES)
                 ->filter(function(Builder $builder, string $value) {
                     $builder->where('blood_type_id', $value);
                 }),
@@ -86,7 +95,11 @@ class RequestsTable extends DataTableComponent
     public function columns(): array
     {
         return [
-            Column::make('Дата', 'created_at')->sortable(),
+            Column::make('Дата', 'created_at')
+                ->sortable()
+                ->format(
+                    fn($value, $row, Column $column) => Carbon::parse($value)->locale('uk')->isoFormat('LL LT')
+                ),
             Column::make('Локація', 'location.name')
                 ->eagerLoadRelations()
                 ->sortable()
@@ -97,16 +110,24 @@ class RequestsTable extends DataTableComponent
                 ->format(
                     fn($value, $row, Column $column) => BloodType::BLOOD_TYPES[$value]
                 ),
-            Column::make('Потрібна кількть', 'qty'),
-            Column::make('Дата закриття', 'closed_on')->sortable(),
-            Column::make('Донори', 'id')
+            Column::make('Потрібнo', 'qty'),
+            Column::make('Запитів', 'id')
                 ->format(
-                    fn($value, $row, Column $column) => var_dump($row)
-                    //fn($value, $row, Column $column) => $row->id
+                    fn($value, $row, Column $column) => $row->donors_count
                 ),
-            /*LinkColumn::make('Донори')
-                ->title(fn($row) => 'Донори')
-                ->location(fn($row) => route('donors.index', $row)),*/
+            Column::make('Відповідей', 'id')
+                ->format(
+                    fn($value, $row, Column $column) => $row->responses_count
+                ),
+            BooleanColumn::make('Закрито', 'id')
+                ->setCallback(function(string $value, $row) {
+                    return (!empty($row->closed_on) || $row->donors_count > $row->qty);
+                }),
+            Column::make('Дата закриття', 'closed_on')
+                ->sortable()
+                ->format(
+                    fn($value, $row, Column $column) => empty($value) ? '' : Carbon::parse($value)->locale('uk')->isoFormat('LL LT')
+                ),
         ];
     }
 
@@ -114,8 +135,21 @@ class RequestsTable extends DataTableComponent
     {
         return BloodRequest::query()
             ->withCount('donors')
-            ->when($this->columnSearch['name'] ?? null, fn ($query, $name) => $query->where('users.name', 'like', '%' . $name . '%'))
-            ->when($this->columnSearch['email'] ?? null, fn ($query, $email) => $query->where('users.email', 'like', '%' . $email . '%'));
+            ->withCount('responses');
+    }
+
+    public function bulkActions(): array
+    {
+        return [
+            'close' => 'Закрити запит',
+        ];
+    }
+
+    public function close()
+    {
+        BloodRequest::whereIn('id', $this->getSelected())->update(['closed_on' => Carbon::now()->toDateTimeString()]);
+
+        $this->clearSelected();
     }
 
 }
