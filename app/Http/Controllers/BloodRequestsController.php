@@ -34,7 +34,7 @@ class BloodRequestsController extends Controller
     {
         $locations = Location::query()->get();
         $bloodTypes = BloodType::BLOOD_TYPES;
-        
+
         return view('requests.create', [
             'locations' => $locations,
             'bloodTypes' => $bloodTypes

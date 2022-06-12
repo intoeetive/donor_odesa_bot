@@ -10,6 +10,11 @@ return [
     'phone' => 'Телефон',
     'birthday' => 'Рік народження',
     'response' => 'Відповідь',
-    'confirmation_date' => 'Дата конфірмації'
+    'confirmation_date' => 'Дата конфірмації',
+    'search_by' => 'Пошук по ',
+
+    //Actions
+    'action_confirm' => 'Підтвердити',
+    'action_export' => 'Експортувати',
 
 ];

@@ -2,10 +2,15 @@
 
 namespace App\Http\Livewire;
 
+use Illuminate\Support\Facades\DB;
+use App\Models\BloodRequest;
 use App\Models\BloodType;
 use App\Models\DonorBloodRequestResponse;
 
+use App\Models\Location;
+use Google\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 use Rappasoft\LaravelLivewireTables\DataTableComponent;
 use Rappasoft\LaravelLivewireTables\Views\Columns\BooleanColumn;
 use Rappasoft\LaravelLivewireTables\Views\Column;
@@ -22,6 +27,7 @@ class ResponsesTable extends DataTableComponent
         $this->setPrimaryKey('id')
             //->setReorderEnabled()
             ->setSingleSortingDisabled()
+            ->setAdditionalSelects(['donor_blood_request_responses.id as id'])
             ->setDefaultSort('confirmation_date', 'desc')
             ->setSortingPillsEnabled()
             ->setHideReorderColumnUnlessReorderingEnabled()
@@ -54,15 +60,15 @@ class ResponsesTable extends DataTableComponent
     public function filters(): array
     {
         return [
-            TextFilter::make('Name')
+            TextFilter::make(__('ui.donor_name'))
                 ->config([
                     'maxlength' => 5,
-                    'placeholder' => 'Search Name',
+                    'placeholder' => __('ui.search_by') . __('ui.donor_name'),
                 ])
                 ->filter(function(Builder $builder, string $value) {
                     $builder->where('donors.name', 'like', '%'.$value.'%');
                 }),
-            SelectFilter::make('Група крові')
+            SelectFilter::make(__('ui.blood_type'))
                 ->options(['' => 'Усі групи'] + BloodType::BLOOD_TYPES)
                 ->filter(function(Builder $builder, string $value) {
                     $builder->where('donors.blood_type_id', $value);
@@ -105,11 +111,29 @@ class ResponsesTable extends DataTableComponent
             ->when($this->columnSearch['email'] ?? null, fn ($query, $email) => $query->where('users.email', 'like', '%' . $email . '%'));
     }
 
+
     public function bulkActions(): array
     {
         return [
-            'confirm' => 'Confirm',
-            'export' => 'Export',
+            'confirm' => __('ui.action_confirm'),
+            'export' => __('ui.action_export'),
         ];
     }
+
+    public function confirm() {
+        DonorBloodRequestResponse::whereIn('id', $this->getSelected())->update(['donorship_date' => now()]);
+        //$responses = DonorBloodRequestResponse::whereIn('id', $this->getSelected());
+        $responses = DB::table('donor_blood_request_responses')->whereIn('id', $this->getSelected());
+        
+        foreach($responses as $response)
+        {
+            echo $response;
+        }
+
+        //dd($responses);
+
+        //$this->clearSelected();
+    }
+
+
 }
