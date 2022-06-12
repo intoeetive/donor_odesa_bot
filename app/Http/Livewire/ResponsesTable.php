@@ -2,32 +2,38 @@
 
 namespace App\Http\Livewire;
 
-use Illuminate\Support\Facades\DB;
-use App\Models\BloodRequest;
 use App\Models\BloodType;
+use App\Models\Location;
+use App\Models\BloodRequest;
 use App\Models\DonorBloodRequestResponse;
 
-use App\Models\Location;
-use Google\Model;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Request;
 use Rappasoft\LaravelLivewireTables\DataTableComponent;
 use Rappasoft\LaravelLivewireTables\Views\Columns\BooleanColumn;
 use Rappasoft\LaravelLivewireTables\Views\Column;
+use Rappasoft\LaravelLivewireTables\Views\Columns\LinkColumn;
 use Rappasoft\LaravelLivewireTables\Views\Filters\SelectFilter;
 use Rappasoft\LaravelLivewireTables\Views\Filters\TextFilter;
+use Rappasoft\LaravelLivewireTables\Views\Filters\NumberFilter;
 
 class ResponsesTable extends DataTableComponent
 {
-
-    protected $model = DonorBloodRequestResponse::class;
-
     public function configure(): void
     {
+        $this->setDebugEnabled();
+        
         $this->setPrimaryKey('id')
             //->setReorderEnabled()
+            ->setAdditionalSelects([
+                'donor_blood_request_responses.id as id',
+                'donor_blood_request_responses.blood_request_id as blood_request_id',
+                'blood_requests.blood_type_id as blood_type_id',
+                'blood_requests.location_id as location_id',
+                'blood_requests.created_at AS bloodRequest_created_at', 
+                'locations.name AS location_name'])
+            ->setEagerLoadAllRelationsEnabled()
             ->setSingleSortingDisabled()
-            ->setAdditionalSelects(['donor_blood_request_responses.id as id'])
             ->setDefaultSort('confirmation_date', 'desc')
             ->setSortingPillsEnabled()
             ->setHideReorderColumnUnlessReorderingEnabled()
@@ -60,18 +66,20 @@ class ResponsesTable extends DataTableComponent
     public function filters(): array
     {
         return [
-            TextFilter::make(__('ui.donor_name'))
-                ->config([
-                    'maxlength' => 5,
-                    'placeholder' => __('ui.search_by') . __('ui.donor_name'),
-                ])
+            SelectFilter::make('Запит', 'blood_request_id')
+                ->options(['' => 'Усі запити'] + BloodRequest::orderByDesc('created_at')->limit(5)->get()->pluck('created_at', 'id')->all())
                 ->filter(function(Builder $builder, string $value) {
-                    $builder->where('donors.name', 'like', '%'.$value.'%');
+                    $builder->where('blood_request_id', $value);
                 }),
-            SelectFilter::make(__('ui.blood_type'))
+            SelectFilter::make('Локація')
+                ->options(['' => 'Усі місця'] + Location::pluck('name', 'id')->all())
+                ->filter(function(Builder $builder, string $value) {
+                    $builder->where('location_id', $value);
+                }),
+            SelectFilter::make('Група крові')
                 ->options(['' => 'Усі групи'] + BloodType::BLOOD_TYPES)
                 ->filter(function(Builder $builder, string $value) {
-                    $builder->where('donors.blood_type_id', $value);
+                    $builder->where('blood_type_id', $value);
                 }),
         ];
     }
@@ -79,6 +87,17 @@ class ResponsesTable extends DataTableComponent
     public function columns(): array
     {
         return [
+            LinkColumn::make('Дата', 'bloodRequest.created_at')
+                ->title(fn($row) => Carbon::parse($row->bloodRequest_created_at)->locale('uk')->calendar())
+                ->location(fn($row) => '/request-responses?table[filters][blood_request_id]=' . $row->blood_request_id),
+            Column::make('Місце', 'location.name')
+                ->sortable()
+                ->searchable(),
+            Column::make(__('ui.blood_type'), 'bloodRequest.blood_type_id')
+                ->collapseOnTablet()
+                ->sortable()
+                ->searchable()
+                ->format(fn($value, $row, Column $column) => BloodType::BLOOD_TYPES[$value]),
             Column::make(__('ui.donor_name'), 'donor.name')
                 ->collapseOnTablet()
                 ->sortable()
@@ -86,54 +105,24 @@ class ResponsesTable extends DataTableComponent
             Column::make(__('ui.phone'), 'donor.phone')
                 ->collapseOnTablet()
                 ->searchable(),
-            Column::make(__('ui.blood_type'), 'donor.blood_type_id')
-                ->collapseOnTablet()
-                ->sortable()
-                ->searchable()
-                ->format(fn($value, $row, Column $column) => BloodType::BLOOD_TYPES[$value]),
-            Column::make(__('ui.birthday'), 'donor.birth_year')
-                ->collapseOnTablet()
-                ->sortable()
-                ->searchable(),
-            BooleanColumn::make(__('ui.donor_weight'), 'donor.weight_ok')->collapseOnTablet()->searchable(),
-            BooleanColumn::make(__('ui.donor_no_contras'), 'donor.no_contras')->collapseOnTablet()->searchable(),
-            Column::make(__('ui.donor_last_donorship_date'), 'donor.last_donorship_date')->collapseOnTablet()->sortable(),
-
             BooleanColumn::make(__('ui.response'), 'no_response_contras')->sortable()->searchable(),
             Column::make(__('ui.confirmation_date'), 'confirmation_date')
+                ->format(
+                    fn($value, $row, Column $column) => Carbon::parse($value)->locale('uk')->isoFormat('LL LT')
+                ),
         ];
     }
 
     public function builder(): Builder
     {
-        return DonorBloodRequestResponse::query()
-            ->when($this->columnSearch['name'] ?? null, fn ($query, $name) => $query->where('users.name', 'like', '%' . $name . '%'))
-            ->when($this->columnSearch['email'] ?? null, fn ($query, $email) => $query->where('users.email', 'like', '%' . $email . '%'));
+        return DonorBloodRequestResponse::query();
     }
-
 
     public function bulkActions(): array
     {
         return [
-            'confirm' => __('ui.action_confirm'),
-            'export' => __('ui.action_export'),
+            'confirm' => 'Confirm',
+            'export' => 'Export',
         ];
     }
-
-    public function confirm() {
-        DonorBloodRequestResponse::whereIn('id', $this->getSelected())->update(['donorship_date' => now()]);
-        //$responses = DonorBloodRequestResponse::whereIn('id', $this->getSelected());
-        $responses = DB::table('donor_blood_request_responses')->whereIn('id', $this->getSelected());
-        
-        foreach($responses as $response)
-        {
-            echo $response;
-        }
-
-        //dd($responses);
-
-        //$this->clearSelected();
-    }
-
-
 }

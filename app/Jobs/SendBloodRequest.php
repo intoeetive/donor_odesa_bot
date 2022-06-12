@@ -8,6 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 use DefStudio\Telegraph\Models\TelegraphChat;
 use DefStudio\Telegraph\Keyboard\Button;
 use DefStudio\Telegraph\Keyboard\Keyboard;
@@ -47,15 +48,21 @@ class SendBloodRequest implements ShouldQueue
     {
         $this->chat = $this->donor->telegramChat;
         $this->chat
-            ->markdown(__('Потрібна саме ваша кров!'))
+            ->markdown(__('messages.message.need_your_blood'))
             ->keyboard(Keyboard::make()->buttons([
-                Button::make(__('Хочу і можу!'))->action('respondDonorRequest')->param('blood_request_id', $this->bloodRequest->id)->param('opt_in', 1),
-                Button::make(__('Не зможу :('))->action('respondDonorRequest')->param('blood_request_id', $this->bloodRequest->id)->param('opt_in', 0),
+                Button::make(__('messages.button.need_your_blood.yes'))->action('respondDonorRequest')->param('blood_request_id', $this->bloodRequest->id)->param('opt_in', 1),
+                Button::make(__('messages.button.need_your_blood.no'))->action('respondDonorRequest')->param('blood_request_id', $this->bloodRequest->id)->param('opt_in', 0),
             ]))
             ->send();
-
+        
         //@todo record what has been sent
         $this->donor->bloodRequests()->attach($this->bloodRequest->id);
-        $this->donor->bloodRequests()->save($this->bloodRequest);
+
+        if (config('telegraph.debug_mode')) {
+            Log::debug('Sent blood request', [
+                'id' => $this->bloodRequest->id,
+                'donor' => $this->donor->name,
+            ]);
+        }
     }
 }

@@ -118,6 +118,13 @@ class LocationsTable extends DataTableComponent
             ->when($this->columnSearch['email'] ?? null, fn ($query, $email) => $query->where('users.email', 'like', '%' . $email . '%'));
     }
 
+    public function activate()
+    {
+        Location::whereIn('id', $this->getSelected())->update(['coords' => mt_rand()]);
+
+        $this->clearSelected();
+    }
+
     public function bulkActions(): array
     {
         return [
