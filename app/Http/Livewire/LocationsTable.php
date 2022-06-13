@@ -134,10 +134,4 @@ class LocationsTable extends DataTableComponent
         ];
     }
 
-    public function activate()
-    {
-        Location::whereIn('id', $this->getSelected())->update(['coords' => mt_rand()]);
-
-        $this->clearSelected();
-    }
 }

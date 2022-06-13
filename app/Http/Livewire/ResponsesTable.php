@@ -3,12 +3,14 @@
 namespace App\Http\Livewire;
 
 use App\Models\BloodType;
+use App\Models\Donor;
 use App\Models\Location;
 use App\Models\BloodRequest;
 use App\Models\DonorBloodRequestResponse;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Rappasoft\LaravelLivewireTables\DataTableComponent;
 use Rappasoft\LaravelLivewireTables\Views\Columns\BooleanColumn;
 use Rappasoft\LaravelLivewireTables\Views\Column;
@@ -22,7 +24,7 @@ class ResponsesTable extends DataTableComponent
     public function configure(): void
     {
         $this->setDebugEnabled();
-        
+
         $this->setPrimaryKey('id')
             //->setReorderEnabled()
             ->setAdditionalSelects([
@@ -30,8 +32,8 @@ class ResponsesTable extends DataTableComponent
                 'donor_blood_request_responses.blood_request_id as blood_request_id',
                 'blood_requests.blood_type_id as blood_type_id',
                 'blood_requests.location_id as location_id',
-                'blood_requests.created_at AS bloodRequest_created_at', 
-                'locations.name AS location_name'])
+                'blood_requests.created_at AS bloodRequest_created_at',
+                'blood_requests.location_id AS location_name'])
             ->setEagerLoadAllRelationsEnabled()
             ->setSingleSortingDisabled()
             ->setDefaultSort('confirmation_date', 'desc')
@@ -90,9 +92,9 @@ class ResponsesTable extends DataTableComponent
             LinkColumn::make('Дата', 'bloodRequest.created_at')
                 ->title(fn($row) => Carbon::parse($row->bloodRequest_created_at)->locale('uk')->calendar())
                 ->location(fn($row) => '/request-responses?table[filters][blood_request_id]=' . $row->blood_request_id),
-            Column::make('Місце', 'location.name')
+            /*Column::make('Місце', 'location.name')
                 ->sortable()
-                ->searchable(),
+                ->searchable(),*/
             Column::make(__('ui.blood_type'), 'bloodRequest.blood_type_id')
                 ->collapseOnTablet()
                 ->sortable()
@@ -125,4 +127,11 @@ class ResponsesTable extends DataTableComponent
             'export' => 'Export',
         ];
     }
+
+    public function confirm() {
+        $responses = DonorBloodRequestResponse::whereIn('id', $this->getSelected())->get()->pluck('donor_id')->all();
+        Donor::whereIn('id', $responses)->update(['last_donorship_date' => now()]);
+        $this->clearSelected();
+    }
+
 }

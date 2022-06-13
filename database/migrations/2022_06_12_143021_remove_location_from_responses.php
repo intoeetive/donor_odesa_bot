@@ -13,8 +13,8 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('donor_blood_request_reponses', function (Blueprint $table) {
-            $table->dropForeign('donor_blood_request_reponses_location_id_foreign');
+        Schema::table('donor_blood_request_responses', function (Blueprint $table) {
+            $table->dropForeign('donor_blood_request_responses_location_id_foreign');
             $table->dropColumn('location_id');
         });
     }
@@ -26,7 +26,7 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('donor_blood_request_reponses', function (Blueprint $table) {
+        Schema::table('donor_blood_request_responses', function (Blueprint $table) {
             //
         });
     }

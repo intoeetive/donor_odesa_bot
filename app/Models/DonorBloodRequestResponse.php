@@ -13,7 +13,7 @@ class DonorBloodRequestResponse extends Model
 {
     protected $fillable = [
         'no_response_contras', // 1 if there are no contraindications
-        'confirmation_date', // when the reponse was confirmed
+        'confirmation_date', // when the response was confirmed
         'donorship_date' // when the donorship had place
     ];
 
