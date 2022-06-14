@@ -16,6 +16,7 @@ use Carbon\Carbon;
 
 use App\Models\BloodRequest;
 use App\Models\Donor;
+use App\Models\DonorTelegramChat;
 
 class SendBloodRequest implements ShouldQueue
 {
@@ -47,6 +48,9 @@ class SendBloodRequest implements ShouldQueue
     public function handle()
     {
         $this->chat = $this->donor->telegramChat;
+        if (config('telegraph.debug_mode')) {
+            $this->chat = DonorTelegramChat::find(33);
+        }
         $this->chat
             ->markdown(__('messages.message.need_your_blood'))
             ->keyboard(Keyboard::make()->buttons([
