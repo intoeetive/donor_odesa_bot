@@ -28,13 +28,16 @@ class SyncFromGoogleSheet extends Command
 
         foreach ($values as $i => $row) {
 
-            $donor = new Donor();
             $insert = [
                 'name' => trim($row["Прізвище, Ім'я"], "'"),
                 'phone' => trim($row["Ваш мобільный телефон"], "'"),
             ];
             if (!empty($insert['phone'])) {
                 $insert['phone'] = preg_replace("/[^0-9]/", "", $insert['phone']);
+                if (strpos($insert['phone'], ',') !== false) {
+                    $phones = explode(',', $insert['phone']);
+                    $insert['phone'] = $phones[0];
+                }
                 if (substr($insert['phone'], 0, 2) == '38') {
                     $insert['phone'] = '+' . $insert['phone'];
                 } elseif (substr($insert['phone'], 0, 2) == '80') {
@@ -63,11 +66,21 @@ class SyncFromGoogleSheet extends Command
                         $insert['blood_type_id'] = null;
                         break;
                 }
-                if (!empty($insert['blood_type_id']) && $blood_rh == '-') {
-                    $insert['blood_type_id'] += 1;
+                if (empty($blood_rh) || $blood_rh == 'Не знаю свою групу крові') {
+                    $insert['blood_type_id'] = null;
+                } else {
+                    if (!empty($insert['blood_type_id']) && strpos($blood_rh, '+') === false) {
+                        //negative Rh
+                        $insert['blood_type_id'] += 1;
+                    }
                 }
-                $donor->fill($insert);
-                $donor->save();
+                //skip if the phone is already in DB
+                $donor = Donor::where('phone', $insert['phone'])->first();
+                if(empty($donor)) {
+                    $donor = new Donor();
+                    $donor->fill($insert);
+                    $donor->save();
+                }
             }
         }
     }
