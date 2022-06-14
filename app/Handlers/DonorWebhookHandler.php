@@ -153,7 +153,7 @@ class DonorWebhookHandler extends WebhookHandler
     public function handle(Request $request, TelegraphBot $bot): void
     {
         if (config('telegraph.debug_mode')) {
-            Log::debug('INPUT', $$this->chat->donor->toArray());
+            Log::debug('INPUT', $this->chat->donor->toArray());
         }
 
         parent::handle($request, $bot);
