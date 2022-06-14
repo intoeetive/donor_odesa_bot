@@ -108,7 +108,7 @@ class RequestsTable extends DataTableComponent
                 ->sortable()
                 ->searchable()
                 ->format(
-                    fn($value, $row, Column $column) => BloodType::BLOOD_TYPES[$value]
+                    fn($value, $row, Column $column) => !empty($value) ? BloodType::BLOOD_TYPES[$value] : '?'
                 ),
             Column::make('Потрібнo', 'qty'),
             Column::make('Запитів', 'id')

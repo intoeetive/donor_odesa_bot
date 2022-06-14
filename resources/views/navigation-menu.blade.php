@@ -13,24 +13,24 @@
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                     <x-jet-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
+                        {{ __('Головна') }}
                     </x-jet-nav-link>
                     <x-jet-nav-link href="{{ route('donors.index') }}" :active="request()->routeIs('donors')">
-                        {{ __('Donors') }}
-                    </x-jet-nav-link>
-                    <x-jet-nav-link href="{{ route('request-responses.index') }}" :active="request()->routeIs('request-responses')">
-                        {{ __('Donor Responses') }}
-                    </x-jet-nav-link>
-                    <x-jet-nav-link href="{{ route('locations.index') }}" :active="request()->routeIs('locations')">
-                        {{ __('Locations') }}
+                        {{ __('Донори') }}
                     </x-jet-nav-link>
                     <x-jet-nav-link href="{{ route('blood-requests.index') }}" :active="request()->routeIs('blood-requests.index')">
-                        {{ __('Donorship Requests') }}
+                        {{ __('Запити') }}
+                    </x-jet-nav-link>
+                    <x-jet-nav-link href="{{ route('request-responses.index') }}" :active="request()->routeIs('request-responses')">
+                        {{ __('Відповіді') }}
                     </x-jet-nav-link>
                 </div>
             </div>
 
             <div class="hidden sm:flex sm:items-center sm:ml-6">
+                <x-jet-nav-link href="{{ route('locations.index') }}" :active="request()->routeIs('locations')">
+                    {{ __('Лікарні') }}
+                </x-jet-nav-link>
                 <x-jet-nav-link href="{{ route('blood-requests.create') }}" :active="request()->routeIs('blood-requests.create')">
                     {{ __('New Request') }}
                 </x-jet-nav-link>

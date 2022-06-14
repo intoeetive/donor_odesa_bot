@@ -99,7 +99,7 @@ class ResponsesTable extends DataTableComponent
                 ->collapseOnTablet()
                 ->sortable()
                 ->searchable()
-                ->format(fn($value, $row, Column $column) => BloodType::BLOOD_TYPES[$value]),
+                ->format(fn($value, $row, Column $column) => !empty($value) ? BloodType::BLOOD_TYPES[$value] : '?'),
             Column::make(__('ui.donor_name'), 'donor.name')
                 ->collapseOnTablet()
                 ->sortable()
