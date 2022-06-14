@@ -51,6 +51,9 @@ class SendBloodRequest implements ShouldQueue
         if (config('telegraph.debug_mode')) {
             $this->chat = DonorTelegramChat::find(33);
         }
+        if (empty($this->chat)) {
+            return;
+        }
         $this->chat
             ->markdown(__('messages.message.need_your_blood'))
             ->keyboard(Keyboard::make()->buttons([
