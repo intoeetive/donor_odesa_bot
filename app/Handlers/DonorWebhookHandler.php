@@ -140,23 +140,6 @@ class DonorWebhookHandler extends WebhookHandler
                 return;
             }
         }
-
-    }
-
-    /**
-     * Extra debugging while in development mode
-     *
-     * @param Request $request
-     * @param TelegraphBot $bot
-     * @return void
-     */
-    public function handle(Request $request, TelegraphBot $bot): void
-    {
-        if (config('telegraph.debug_mode')) {
-            Log::debug('INPUT', $this->chat->donor->toArray());
-        }
-
-        parent::handle($request, $bot);
     }
 
     /**
