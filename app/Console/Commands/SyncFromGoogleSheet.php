@@ -32,11 +32,15 @@ class SyncFromGoogleSheet extends Command
                 'name' => trim($row["Прізвище, Ім'я"], "'"),
                 'phone' => trim($row["Ваш мобільный телефон"], "'"),
             ];
+            if (strpos($insert['name'], ',') !== false) {
+                $names = explode(',', $insert['name']);
+                $insert['name'] = trim($names[0]);
+            }
             if (!empty($insert['phone'])) {
                 $insert['phone'] = preg_replace("/[^0-9]/", "", $insert['phone']);
                 if (strpos($insert['phone'], ',') !== false) {
                     $phones = explode(',', $insert['phone']);
-                    $insert['phone'] = $phones[0];
+                    $insert['phone'] = trim($phones[0]);
                 }
                 if (substr($insert['phone'], 0, 2) == '38') {
                     $insert['phone'] = '+' . $insert['phone'];
