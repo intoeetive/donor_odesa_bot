@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'donor_name' => 'Ім\'я донору',
+    'donor_name' => 'Ім\'я донора',
     'donor_weight' => 'Вага в нормі',
     'donor_no_contras' => 'Протипоказань немає',
     'donor_last_donorship_date' => 'Останнє донорство',
@@ -10,7 +10,7 @@ return [
     'phone' => 'Телефон',
     'birthday' => 'Рік народження',
     'response' => 'Відповідь',
-    'confirmation_date' => 'Дата конфірмації',
+    'confirmation_date' => 'Підтверджено',
     'search_by' => 'Пошук по ',
 
     //Actions

@@ -15,20 +15,20 @@
                     <x-jet-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                         {{ __('Головна') }}
                     </x-jet-nav-link>
-                    <x-jet-nav-link href="{{ route('donors.index') }}" :active="request()->routeIs('donors')">
+                    <x-jet-nav-link href="{{ route('donors.index') }}" :active="request()->routeIs('donors.index')">
                         {{ __('Донори') }}
                     </x-jet-nav-link>
                     <x-jet-nav-link href="{{ route('blood-requests.index') }}" :active="request()->routeIs('blood-requests.index')">
                         {{ __('Запити') }}
                     </x-jet-nav-link>
-                    <x-jet-nav-link href="{{ route('request-responses.index') }}" :active="request()->routeIs('request-responses')">
+                    <x-jet-nav-link href="{{ route('request-responses.index') }}" :active="request()->routeIs('request-responses.index')">
                         {{ __('Відповіді') }}
                     </x-jet-nav-link>
                 </div>
             </div>
 
             <div class="hidden sm:flex sm:items-center sm:ml-6">
-                <x-jet-nav-link href="{{ route('locations.index') }}" :active="request()->routeIs('locations')">
+                <x-jet-nav-link href="{{ route('locations.index') }}" :active="request()->routeIs('locations.index')">
                     {{ __('Лікарні') }}
                 </x-jet-nav-link>
                 <x-jet-nav-link href="{{ route('blood-requests.create') }}" :active="request()->routeIs('blood-requests.create')">

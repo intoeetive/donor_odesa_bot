@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class BloodRequestsController extends Controller
 {
@@ -33,6 +34,7 @@ class BloodRequestsController extends Controller
     public function create()
     {
         $locations = Location::query()->get();
+        $locations = Auth::user()->locations()->get();
         $bloodTypes = BloodType::BLOOD_TYPES;
 
         return view('requests.create', [

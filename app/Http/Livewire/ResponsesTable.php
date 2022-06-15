@@ -18,6 +18,7 @@ use Rappasoft\LaravelLivewireTables\Views\Columns\LinkColumn;
 use Rappasoft\LaravelLivewireTables\Views\Filters\SelectFilter;
 use Rappasoft\LaravelLivewireTables\Views\Filters\TextFilter;
 use Rappasoft\LaravelLivewireTables\Views\Filters\NumberFilter;
+use Illuminate\Support\Facades\Auth;
 
 class ResponsesTable extends DataTableComponent
 {
@@ -41,6 +42,7 @@ class ResponsesTable extends DataTableComponent
             ->setHideReorderColumnUnlessReorderingEnabled()
             ->setFilterLayoutSlideDown()
             ->setRememberColumnSelectionDisabled()
+            ->setColumnSelectDisabled()
             ->setSecondaryHeaderTrAttributes(function($rows) {
                 return ['class' => 'bg-gray-100'];
             })
@@ -62,19 +64,27 @@ class ResponsesTable extends DataTableComponent
                 return ['default' => true];
             })
             ->setUseHeaderAsFooterEnabled()
+            ->setPerPage(25)
             ->setHideBulkActionsWhenEmptyEnabled();
     }
 
     public function filters(): array
     {
+        //$locations = Location::pluck('name', 'id')->all();
+        $locations = Auth::user()->locations()->pluck('id')->toArray();
+        $requests = [];
+        $requestsQuery = BloodRequest::orderByDesc('created_at')->whereIn('location_id', $locations)->limit(5)->get()->pluck('created_at', 'id');
+        foreach ($requestsQuery as $id => $value) {
+            $requests[$id] = Carbon::parse($value)->locale('uk')->isoFormat('LL LT');
+        }
         return [
             SelectFilter::make('Запит', 'blood_request_id')
-                ->options(['' => 'Усі запити'] + BloodRequest::orderByDesc('created_at')->limit(5)->get()->pluck('created_at', 'id')->all())
+                ->options(['' => 'Усі запити'] + $requests)
                 ->filter(function(Builder $builder, string $value) {
                     $builder->where('blood_request_id', $value);
                 }),
             SelectFilter::make('Локація')
-                ->options(['' => 'Усі місця'] + Location::pluck('name', 'id')->all())
+                ->options(['' => 'Усі місця'] + $locations)
                 ->filter(function(Builder $builder, string $value) {
                     $builder->where('location_id', $value);
                 }),
@@ -90,7 +100,7 @@ class ResponsesTable extends DataTableComponent
     {
         return [
             LinkColumn::make('Дата', 'bloodRequest.created_at')
-                ->title(fn($row) => Carbon::parse($row->bloodRequest_created_at)->locale('uk')->calendar())
+                ->title(fn($row) => Carbon::parse($row->bloodRequest_created_at)->locale('uk')->isoFormat('LL LT'))
                 ->location(fn($row) => '/request-responses?table[filters][blood_request_id]=' . $row->blood_request_id),
             /*Column::make('Місце', 'location.name')
                 ->sortable()
@@ -117,7 +127,9 @@ class ResponsesTable extends DataTableComponent
 
     public function builder(): Builder
     {
-        return DonorBloodRequestResponse::query();
+        $locations = Auth::user()->locations()->pluck('id')->toArray();
+        return DonorBloodRequestResponse::query()
+            ->whereIn('location_id', $locations);
     }
 
     public function bulkActions(): array

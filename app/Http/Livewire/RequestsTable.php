@@ -18,6 +18,7 @@ use Rappasoft\LaravelLivewireTables\Views\Filters\SelectFilter;
 use Rappasoft\LaravelLivewireTables\Views\Filters\MultiSelectFilter;
 use Rappasoft\LaravelLivewireTables\Views\Filters\DateFilter;
 use Rappasoft\LaravelLivewireTables\Views\Filters\TextFilter;
+use Illuminate\Support\Facades\Auth;
 
 class RequestsTable extends DataTableComponent
 {
@@ -66,6 +67,7 @@ class RequestsTable extends DataTableComponent
 
     public function filters(): array
     {
+        $locations = Auth::user()->locations()->pluck('name', 'id')->toArray();
         return [
             SelectFilter::make('Група крові')
                 ->options(['' => 'Усі групи'] + BloodType::BLOOD_TYPES)
@@ -73,7 +75,7 @@ class RequestsTable extends DataTableComponent
                     $builder->where('blood_type_id', $value);
                 }),
             SelectFilter::make('Локація')
-                ->options(['' => 'Усі локації'] + BloodType::BLOOD_TYPES)
+                ->options(['' => 'Усі локації'] + $locations)
                 ->filter(function(Builder $builder, string $value) {
                     $builder->where('blood_type_id', $value);
                 }),
@@ -133,9 +135,11 @@ class RequestsTable extends DataTableComponent
 
     public function builder(): Builder
     {
+        $locations = Auth::user()->locations()->pluck('id')->toArray();
         return BloodRequest::query()
             ->withCount('donors')
-            ->withCount('responses');
+            ->withCount('responses')
+            ->whereIn('location_id', $locations);
     }
 
     public function bulkActions(): array

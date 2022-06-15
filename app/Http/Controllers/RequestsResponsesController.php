@@ -7,6 +7,7 @@ use App\Models\DonorBloodRequestResponse;
 use App\Models\Location;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 
 class RequestsResponsesController extends Controller
 {
@@ -27,8 +28,8 @@ class RequestsResponsesController extends Controller
      */
     public function create()
     {
-        //
         $locations = Location::query()->get();
+        $locations = Auth::user()->locations()->get();
         $bloodTypes = BloodType::BLOOD_TYPES;
 
         return view('requests.create', [

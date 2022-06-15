@@ -15,6 +15,7 @@ use Rappasoft\LaravelLivewireTables\Views\Filters\SelectFilter;
 use Rappasoft\LaravelLivewireTables\Views\Filters\MultiSelectFilter;
 use Rappasoft\LaravelLivewireTables\Views\Filters\DateFilter;
 use Rappasoft\LaravelLivewireTables\Views\Filters\TextFilter;
+use Illuminate\Support\Facades\Auth;
 
 class LocationsTable extends DataTableComponent
 {
@@ -30,6 +31,7 @@ class LocationsTable extends DataTableComponent
             ->setHideReorderColumnUnlessReorderingEnabled()
             ->setFilterLayoutSlideDown()
             ->setRememberColumnSelectionDisabled()
+            ->setColumnSelectDisabled()
             ->setSecondaryHeaderTrAttributes(function($rows) {
                 return ['class' => 'bg-gray-100'];
             })
@@ -54,51 +56,6 @@ class LocationsTable extends DataTableComponent
             ->setHideBulkActionsWhenEmptyEnabled();
     }
 
-    public function filters(): array
-    {
-        return [
-            TextFilter::make('Name')
-                ->config([
-                    'maxlength' => 5,
-                    'placeholder' => 'Search Name',
-                ])
-                ->filter(function(Builder $builder, string $value) {
-                    $builder->where('users.name', 'like', '%'.$value.'%');
-                }),
-
-            SelectFilter::make('Active')
-                ->setFilterPillTitle('User Status')
-                ->setFilterPillValues([
-                    '1' => 'Active',
-                    '0' => 'Inactive',
-                ])
-                ->options([
-                    '' => 'All',
-                    '1' => 'Yes',
-                    '0' => 'No',
-                ])
-                ->filter(function(Builder $builder, string $value) {
-                    if ($value === '1') {
-                        $builder->where('active', true);
-                    } elseif ($value === '0') {
-                        $builder->where('active', false);
-                    }
-                }),
-            DateFilter::make('Verified From')
-                ->config([
-                    'min' => '2020-01-01',
-                    'max' => '2021-12-31',
-                ])
-                ->filter(function(Builder $builder, string $value) {
-                    $builder->where('email_verified_at', '>=', $value);
-                }),
-            DateFilter::make('Verified To')
-                ->filter(function(Builder $builder, string $value) {
-                    $builder->where('email_verified_at', '<=', $value);
-                }),
-        ];
-    }
-
     public function columns(): array
     {
         return [
@@ -113,25 +70,9 @@ class LocationsTable extends DataTableComponent
 
     public function builder(): Builder
     {
+        $locations = Auth::user()->locations()->pluck('id')->toArray();
         return Location::query()
-            ->when($this->columnSearch['name'] ?? null, fn ($query, $name) => $query->where('users.name', 'like', '%' . $name . '%'))
-            ->when($this->columnSearch['email'] ?? null, fn ($query, $email) => $query->where('users.email', 'like', '%' . $email . '%'));
-    }
-
-    public function activate()
-    {
-        Location::whereIn('id', $this->getSelected())->update(['coords' => mt_rand()]);
-
-        $this->clearSelected();
-    }
-
-    public function bulkActions(): array
-    {
-        return [
-            'activate' => 'Activate',
-            'deactivate' => 'Deactivate',
-            'export' => 'Export',
-        ];
+            ->whereIn('id', $locations);
     }
 
 }

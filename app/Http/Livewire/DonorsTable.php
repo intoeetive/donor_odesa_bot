@@ -25,7 +25,7 @@ class DonorsTable extends DataTableComponent
     
     public function configure(): void
     {
-        $this->setDebugEnabled();
+        //$this->setDebugEnabled();
         
         $this->setPrimaryKey('id')
             ->setAdditionalSelects(['donors.id as id'])
@@ -58,6 +58,7 @@ class DonorsTable extends DataTableComponent
                 return ['default' => true];
             })
             ->setUseHeaderAsFooterEnabled()
+            ->setPerPage(25)
             ->setHideBulkActionsWhenEmptyEnabled();
     }
 
@@ -133,7 +134,11 @@ class DonorsTable extends DataTableComponent
             BooleanColumn::make('Вага в нормі', 'weight_ok')->sortable()->searchable(),
             BooleanColumn::make('Протипоказань немає', 'no_contras')->sortable()->searchable(),
             Column::make('Останнє донорство', 'last_donorship_date')->sortable(),
-            Column::make('Зареєстрований', 'created_at')->sortable()
+            Column::make('Зареєстрований', 'created_at')
+                ->format(
+                    fn($value, $row, Column $column) => Carbon::parse($value)->locale('uk')->isoFormat('LL LT')
+                )
+                ->sortable()
         ];
     }
 
