@@ -6,7 +6,7 @@ use App\Models\BloodRequest;
 use App\Models\BloodType;
 use App\Models\Location;
 use App\Jobs\SendBloodRequest;
-use App\Console\Commands\CheckBloodRequestAreClosed;
+use App\Console\Commands\SendRequest;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -64,7 +64,7 @@ class BloodRequestsController extends Controller
         $bloodRequest->location_id = $input['location_id'];
         $bloodRequest->save();
 
-        $sendRequestCommand = new CheckBloodRequestAreClosed();
+        $sendRequestCommand = new SendRequest();
         $sendRequestCommand->handle();
 
         return $request->wantsJson()

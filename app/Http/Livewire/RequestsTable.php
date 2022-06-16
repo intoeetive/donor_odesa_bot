@@ -128,7 +128,7 @@ class RequestsTable extends DataTableComponent
             Column::make('Дата закриття', 'closed_on')
                 ->sortable()
                 ->format(
-                    fn($value, $row, Column $column) => empty($value) ? '' : Carbon::parse($value)->locale('uk')->isoFormat('LL LT')
+                    fn($value, $row, Column $column) =>!empty($value) ? Carbon::parse($value)->locale('uk')->isoFormat('LL LT') : ''
                 ),
         ];
     }

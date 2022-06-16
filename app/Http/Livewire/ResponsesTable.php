@@ -24,7 +24,7 @@ class ResponsesTable extends DataTableComponent
 {
     public function configure(): void
     {
-        $this->setDebugEnabled();
+        //$this->setDebugEnabled();
 
         $this->setPrimaryKey('id')
             //->setReorderEnabled()
@@ -71,9 +71,9 @@ class ResponsesTable extends DataTableComponent
     public function filters(): array
     {
         //$locations = Location::pluck('name', 'id')->all();
-        $locations = Auth::user()->locations()->pluck('id')->toArray();
+        $locations = Auth::user()->locations()->pluck('name', 'id')->toArray();
         $requests = [];
-        $requestsQuery = BloodRequest::orderByDesc('created_at')->whereIn('location_id', $locations)->limit(5)->get()->pluck('created_at', 'id');
+        $requestsQuery = BloodRequest::orderByDesc('created_at')->whereIn('location_id', array_keys($locations))->limit(5)->get()->pluck('created_at', 'id');
         foreach ($requestsQuery as $id => $value) {
             $requests[$id] = Carbon::parse($value)->locale('uk')->isoFormat('LL LT');
         }
@@ -120,7 +120,11 @@ class ResponsesTable extends DataTableComponent
             BooleanColumn::make(__('ui.response'), 'no_response_contras')->sortable()->searchable(),
             Column::make(__('ui.confirmation_date'), 'confirmation_date')
                 ->format(
-                    fn($value, $row, Column $column) => Carbon::parse($value)->locale('uk')->isoFormat('LL LT')
+                    fn($value, $row, Column $column) =>!empty($value) ? Carbon::parse($value)->locale('uk')->isoFormat('LL LT') : ''
+                ),
+            Column::make("Дата донорства", 'donorship_date')
+                ->format(
+                    fn($value, $row, Column $column) => !empty($value) ? Carbon::parse($value)->locale('uk')->isoFormat('LL LT') : ''
                 ),
         ];
     }
@@ -135,14 +139,15 @@ class ResponsesTable extends DataTableComponent
     public function bulkActions(): array
     {
         return [
-            'confirm' => 'Confirm',
-            'export' => 'Export',
+            'confirm' => 'Підтвердити донорство',
         ];
     }
 
     public function confirm() {
-        $responses = DonorBloodRequestResponse::whereIn('id', $this->getSelected())->get()->pluck('donor_id')->all();
-        Donor::whereIn('id', $responses)->update(['last_donorship_date' => now()]);
+        $donors = DonorBloodRequestResponse::whereIn('id', $this->getSelected())->get()->pluck('donor_id')->all();
+        Donor::whereIn('id', $donors)->update(['last_donorship_date' => Carbon::now()->toDateTimeString()]);
+        DonorBloodRequestResponse::whereIn('id', $this->getSelected())->update(['donorship_date' => Carbon::now()->toDateTimeString()]);
+
         $this->clearSelected();
     }
 

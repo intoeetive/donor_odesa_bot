@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Models\Donor;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\DonorsController;
 use App\Http\Controllers\BloodRequestsController;
 use App\Http\Controllers\RequestsResponsesController;
@@ -23,10 +24,7 @@ Route::middleware([
     config('jetstream.auth_session'),
     'verified'
 ])->group(function () {
-    Route::get('/', function () {
-        return view('dashboard');
-    })->name('dashboard');
-
+    Route::get('/', [HomeController::class, 'index'])->name('dashboard');
     Route::get('donors/{donor}', function(Donor $donor) {
         return $donor;
     });

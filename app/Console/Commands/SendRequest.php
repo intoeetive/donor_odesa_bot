@@ -15,7 +15,7 @@ use App\Models\Donor;
  * Checks for blood requests that are not closed
  * and triggers sending requests for the requested quantity (miltiplied)
  */
-class CheckBloodRequestAreClosed extends Command
+class SendRequest extends Command
 {
     protected $signature = 'donor:send-requests';
 
