@@ -18,10 +18,6 @@ class RemindMark extends Command
 
     protected $description = 'Create jobs for blood requests that are not closed';
 
-    protected $currentBloodRequest;
-    protected $minYear;
-    protected $maxYear;
-
     public function __construct()
     {
         parent::__construct();
@@ -30,10 +26,8 @@ class RemindMark extends Command
     public function handle()
     {
         //get all blood requests that are not complete yet
-        $responses = DonorBloodRequestResponse::with('donor')->whereNull('donorship_date')->where('no_donorship', '!=', 1)->where('confirmation_date', '<', Carbon::now()->subDays(2))->get();
+        $responses = DonorBloodRequestResponse::with('donor')->whereNull('donorship_date')->whereNull('no_donorship')->where('confirmation_date', '<', Carbon::now()->subDays(2))->get();
         if (!$responses->isEmpty()) {
-            $this->maxYear = Carbon::now()->year - 18;
-            $this->minYear = Carbon::now()->year - 64;
             foreach ($responses->all() as $responses) {
                 RemindMarkJob::dispatch($responses);
             }

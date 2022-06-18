@@ -35,6 +35,7 @@ class RecentResponsesTable extends ResponsesTable
         $locations = Auth::user()->locations()->pluck('id')->toArray();
         return DonorBloodRequestResponse::query()
             ->whereIn('location_id', $locations)
+            ->whereNull('no_donorship')
             ->whereNull('donorship_date');
     }
 
