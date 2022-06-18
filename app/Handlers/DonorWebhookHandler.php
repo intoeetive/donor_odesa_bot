@@ -615,15 +615,18 @@ class DonorWebhookHandler extends WebhookHandler
         $this->cleanKeyboard();
 
         $data = $this->data->get('confirm');
+        $response = DonorBloodRequestResponse::where('id', $this->data->get('blood_request_response_id'))->first();
 
         if ($data < 1) {
+            $response->no_donorship = 1;
+            $response->save();
             $this->chat
                 ->markdown(__('messages.response.could_not_donor_we_are_sorry'))
                 ->send();
             return;
         }
 
-        $response = DonorBloodRequestResponse::where('id', $this->data->get('blood_request_response_id'))->first();
+        
         $response->donorship_date =  Carbon::now()->subDays(1)->toDateTimeString();
         $response->save();
 

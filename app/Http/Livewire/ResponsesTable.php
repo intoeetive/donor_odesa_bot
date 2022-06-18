@@ -7,6 +7,7 @@ use App\Models\Donor;
 use App\Models\Location;
 use App\Models\BloodRequest;
 use App\Models\DonorBloodRequestResponse;
+use App\Models\DonorTelegramChat;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -18,6 +19,7 @@ use Rappasoft\LaravelLivewireTables\Views\Columns\LinkColumn;
 use Rappasoft\LaravelLivewireTables\Views\Filters\SelectFilter;
 use Rappasoft\LaravelLivewireTables\Views\Filters\TextFilter;
 use Rappasoft\LaravelLivewireTables\Views\Filters\NumberFilter;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 
 class ResponsesTable extends DataTableComponent
@@ -144,14 +146,20 @@ class ResponsesTable extends DataTableComponent
     }
 
     public function confirm() {
-        $donors = DonorBloodRequestResponse::whereIn('id', $this->getSelected())->get()->pluck('donor_id')->all();
-        Donor::whereIn('id', $donors)->update(['last_donorship_date' => Carbon::now()->toDateTimeString()]);
+        $donorIds = DonorBloodRequestResponse::whereIn('id', $this->getSelected())->get()->pluck('donor_id')->all();
+        Donor::whereIn('id', $donorIds)->update(['last_donorship_date' => Carbon::now()->toDateTimeString()]);
         DonorBloodRequestResponse::whereIn('id', $this->getSelected())->update(['donorship_date' => Carbon::now()->toDateTimeString()]);
-
-        foreach ($donors as $donor) {
-            $donor->chat
+        
+        foreach ($donorIds as $donorId) {
+            $chat = DonorTelegramChat::where('donor_id', $donorId)->get();
+            if (config('telegraph.debug_mode')) {
+                Log::debug('Thank you', $chat->toArray());
+            }
+            if (!empty($chat)) {
+                $chat->first()
                     ->markdown(__('messages.response.thank_you_for_donorship'))
                     ->send();
+            }
         }
 
         $this->clearSelected();
