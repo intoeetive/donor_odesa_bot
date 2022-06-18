@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\BloodRequest;
 use App\Models\BloodType;
 use App\Models\Location;
-use App\Jobs\SendBloodRequest;
 use App\Console\Commands\SendRequest;
 
 use Illuminate\Http\Request;

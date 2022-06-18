@@ -18,7 +18,7 @@ use App\Models\BloodRequest;
 use App\Models\Donor;
 use App\Models\DonorTelegramChat;
 
-class SendBloodRequest implements ShouldQueue
+class SendBloodRequestJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 

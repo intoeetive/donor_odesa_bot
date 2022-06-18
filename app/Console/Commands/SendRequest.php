@@ -7,7 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
 
-use App\Jobs\SendBloodRequest;
+use App\Jobs\SendBloodRequestJob;
 use App\Models\BloodRequest;
 use App\Models\Donor;
 
@@ -78,7 +78,7 @@ class SendRequest extends Command
                 
                 if ($donors->isNotEmpty()) {
                     foreach ($donors->all() as $donor) {
-                        SendBloodRequest::dispatch($bloodRequest, $donor);
+                        SendBloodRequestJob::dispatch($bloodRequest, $donor);
                     }
                 }
             }

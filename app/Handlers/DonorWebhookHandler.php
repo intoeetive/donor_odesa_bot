@@ -609,4 +609,29 @@ class DonorWebhookHandler extends WebhookHandler
                 ->markdown($bloodRequest->location->bot_instructions)
                 ->send();
     }
+
+    public function confirmDonorship()
+    {
+        $this->cleanKeyboard();
+
+        $data = $this->data->get('confirm');
+
+        if ($data < 1) {
+            $this->chat
+                ->markdown(__('messages.response.could_not_donor_we_are_sorry'))
+                ->send();
+            return;
+        }
+
+        $response = DonorBloodRequestResponse::where('id', $this->data->get('blood_request_response_id'))->first();
+        $response->donorship_date =  Carbon::now()->subDays(1)->toDateTimeString();
+        $response->save();
+
+        $response->donor->last_donorship_date = $response->donorship_date;
+        $response->donor->save();
+
+        $this->chat
+                ->markdown(__('messages.response.thank_you_for_donorship'))
+                ->send();
+    }
 }

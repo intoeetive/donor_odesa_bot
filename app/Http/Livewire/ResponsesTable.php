@@ -148,6 +148,12 @@ class ResponsesTable extends DataTableComponent
         Donor::whereIn('id', $donors)->update(['last_donorship_date' => Carbon::now()->toDateTimeString()]);
         DonorBloodRequestResponse::whereIn('id', $this->getSelected())->update(['donorship_date' => Carbon::now()->toDateTimeString()]);
 
+        foreach ($donors as $donor) {
+            $donor->chat
+                    ->markdown(__('messages.response.thank_you_for_donorship'))
+                    ->send();
+        }
+
         $this->clearSelected();
     }
 
