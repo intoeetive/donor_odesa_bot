@@ -49,7 +49,7 @@ class SendBloodRequestJob implements ShouldQueue
     {
         $this->chat = $this->donor->telegramChat;
         if (config('telegraph.debug_mode')) {
-            $this->chat = DonorTelegramChat::find(33);
+            //$this->chat = DonorTelegramChat::find(33);
         }
         if (empty($this->chat)) {
             return;
