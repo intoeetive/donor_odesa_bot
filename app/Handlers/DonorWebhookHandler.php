@@ -601,7 +601,7 @@ class DonorWebhookHandler extends WebhookHandler
             'confirmation_date' => Carbon::now()->toDateTimeString()
         ]);
         $response->blood_request_id = $bloodRequest->id;
-        $response->location_id = $bloodRequest->location_id;
+        //$response->location_id = $bloodRequest->location_id;
         $response->donor()->associate($this->chat->donor);
         $response->save();
 
